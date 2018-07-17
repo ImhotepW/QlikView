@@ -1,0 +1,1193 @@
+﻿///$tab Main
+LET vReloadStart=now(1);
+
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+
+
+SET vDataModelVersion="5.1.0(1.0)";
+SET vApp = "INSIGHT";
+LET vPrefix = 'XMD_';
+LET vUpFolders = if (ISnull(FileSize('..\20_QV_INCLUDE\$(vApp)_DBRD_Locations.cfg')),'..\..\..','..');
+
+//$(Include=..\..\10_QV_DB_CONFIG\XMCConnectionString.cfg); 
+$(Include=$(vUpFolders)\20_QV_INCLUDE\$(vApp)_DBRD_Locations.cfg);
+$(Include=$(vUpFolders)\80_LOCAL_SOURCES\Environment_Variable.cfg);
+
+
+///$tab Statistics
+SUB StartStat (pTableName)
+	LET zTimeMark=now(1);
+	LET zTableName = pTableName;
+ENDSUB;
+
+SUB StoreStat
+	
+	LET zNoOfColumns=NoOfFields ('$(zTableName)');
+	LET zNoOfRows=NoOfRows('$(zTableName)');
+	LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+	
+	[%Load Statistics]: 
+	Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+	'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+ENDSUB;
+///$tab ControlData
+CALL StartStat('ServerInfo');
+
+ServerInfo:
+LOAD *
+FROM [$(zLocalSources_Location)\ControlData.xlsx]
+(ooxml, embedded labels, table is [Server Info])
+Where Environment = '$(vEnvironment)';
+CALL StoreStat;
+
+//CALL StartStat('Load_Monitor');
+
+Load_Monitor:
+LOAD *
+FROM [$(zLocalSources_Location)\ControlData.xlsx]
+(ooxml, embedded labels, table is [Load Monitor]);
+//CALL StoreStat;
+
+
+
+//CALL StartStat('Dashboard_Schedule');
+
+DBRD_SCHDL:
+CrossTable(WeekDay, ScheduleTime)
+LOAD Dashboard, 
+     Monday, 
+     Tuesday, 
+     Wednesday, 
+     Thursday, 
+     Friday, 
+     Saturday, 
+     Sunday
+FROM [$(zLocalSources_Location)\ControlData.xlsx]
+(ooxml, embedded labels, table is [Schedule]);
+
+NoConcatenate
+Dashboard_Schedule:
+LOAD Dashboard,
+     Time#(Left(ScheduleTime, Len(ScheduleTime)-2) & if(Index(ScheduleTime, ':')=0, ':00') &' '& Right(ScheduleTime,2), 'h:mm TT') as ScheduleTime,
+     WeekDay;
+LOAD Dashboard,
+     Upper(ScheduleTime) as ScheduleTime,
+     WeekDay;
+LOAD Dashboard,
+     Trim(SubField(ScheduleTime, ',')) as ScheduleTime,
+     WeekDay
+Resident DBRD_SCHDL;
+DROP Table DBRD_SCHDL;
+//CALL StoreStat;
+///$tab Application
+CALL StartStat('Application');
+Application:
+LOAD Application,// as Applicationtest,
+     Dashboard,// as Dashboardtest, 
+     AP_Path// as AP_Pathtest
+Resident Load_Monitor 
+ where FileType='APP';
+
+CALL StoreStat;
+
+ 
+
+///$tab LogsLoad
+CALL StartStat('File_Reload');
+File_Reload: 
+LOAD ServerType,
+     Application,
+     FileName,
+     Timestamp(LoadStart) as LoadStartTS,
+     Timestamp(LoadEnd) as LoadEndTS,
+     Date(Floor(LoadStart)) as LoadDT
+FROM [$(zGlobalQVD_Location)\$(vPrefix)Load_Monitor.qvd](qvd);
+ 
+
+Join(File_Reload)
+LOAD Dashboard, // Schedule variant 3 purpose
+     Application,
+     FileName,
+     FilePath,
+     FileType,
+     Sequence
+Resident Load_Monitor;
+
+//exit script;
+
+
+
+
+
+///$tab Schedule
+
+
+
+TmpTbl: LOAD * Inline [ServerType, Dashboard, FileName, LoadStartTS, ScheduleTS];
+
+LET vFileReloadRowCnt=NoOfRows('File_Reload');
+FOR i=0 to vFileReloadRowCnt-1
+  LET vServerType = Peek('ServerType', $(i), 'File_Reload');
+  LET vDashboard = Peek('Dashboard', $(i), 'File_Reload');
+  LET vFileName = Peek('FileName', $(i), 'File_Reload');
+  LET vLoadStartTS = Peek('LoadStartTS', $(i), 'File_Reload');
+  
+  Concatenate (TmpTbl)
+  LOAD '$(vServerType)' as ServerType,
+       Dashboard,
+       '$(vFileName)' as FileName, 
+       '$(vLoadStartTS)' as LoadStartTS,
+       Num(max(Timestamp(Floor('$(vLoadStartTS)')+Time#(ScheduleTime, 'h:mm TT')))) as ScheduleTS
+  Resident Dashboard_Schedule
+  Where Dashboard = '$(vDashboard)'
+    and WeekDay = Date('$(vLoadStartTS)', 'WWWW')
+    and Timestamp(Floor(Timestamp#('$(vLoadStartTS)')) + ScheduleTime) <= Timestamp('$(vLoadStartTS)')
+  Group By Dashboard;
+  
+NEXT;
+
+left join(File_Reload)
+load ServerType,
+     Dashboard,
+     FileName,
+     LoadStartTS,
+     1 as CheckExists
+Resident TmpTbl;
+
+Test_Table:
+NoConcatenate
+load * Resident File_Reload
+where CheckExists<>1
+;
+
+drop Field CheckExists from File_Reload;
+//
+//TmpTbl2:NoConcatenate LOAD * Inline [ServerType, Dashboard, FileName, LoadStartTS, ScheduleTS];
+
+LET vFileReloadRowCnt=NoOfRows('Test_Table');
+FOR i=0 to vFileReloadRowCnt-1
+  LET vServerType = Peek('ServerType', $(i), 'Test_Table');
+  LET vDashboard = Peek('Dashboard', $(i), 'Test_Table');
+  LET vFileName = Peek('FileName', $(i), 'Test_Table');
+  LET vLoadStartTS = Peek('LoadStartTS', $(i), 'Test_Table');
+  
+  Concatenate (TmpTbl)
+  LOAD '$(vServerType)' as ServerType,
+       Dashboard,
+       '$(vFileName)' as FileName, 
+       '$(vLoadStartTS)' as LoadStartTS,
+       Num(Min(Timestamp(Floor('$(vLoadStartTS)')+Time#(ScheduleTime, 'h:mm TT')))) as ScheduleTS
+  Resident Dashboard_Schedule
+  Where Dashboard = '$(vDashboard)'
+    and WeekDay = Date('$(vLoadStartTS)', 'WWWW')
+    and Timestamp(Floor(Timestamp#('$(vLoadStartTS)')) + ScheduleTime) >= Timestamp('$(vLoadStartTS)')
+  Group By Dashboard;
+  
+NEXT;
+
+Drop table Test_Table;
+ 
+inner Join (File_Reload)
+LOAD ServerType,
+     Dashboard,
+     FileName,
+     LoadStartTS,
+     Num(ScheduleTS) as ScheduleTS
+Resident TmpTbl;
+Drop table TmpTbl;
+
+//
+//left Join (File_Reload)
+//LOAD ServerType,
+//     Dashboard,
+//     FileName,
+//     LoadStartTS,
+//     ScheduleTS
+//Resident TmpTbl2;
+//Drop table TmpTbl2;
+
+DROP Field Dashboard From File_Reload;
+
+Days_Between:
+LOAD ServerType,
+     Min(LoadDT) as MinLD,
+     Max(LoadDT) as MaxLD,
+     Max(LoadDT)-Min(LoadDT)+1 as days
+Resident File_Reload
+Group By ServerType;
+
+
+Schedule_Calendar:
+LOAD * Inline [ServerType, LoadDT];
+//Defining monitored dates from QVD for each Server Type (DEV, UAT, PROD)
+LET vDaysBetweenRowCnt = NoOfRows('Days_Between');
+FOR i = 0 to $(vDaysBetweenRowCnt)-1 
+  LET vDaysCnt = peek('days', $(i), 'Days_Between');
+  LET vMinLD = peek('MinLD', $(i), 'Days_Between');
+  LET vServerType = Peek('ServerType', $(i), 'Days_Between');
+  
+  Concatenate(Schedule_Calendar)
+  //Join (File_Reload)
+  LOAD '$(vServerType)' as ServerType,
+       Date($(vMinLD) + IterNo()-1) as LoadDT,
+       Capitalize(Date($(vMinLD) + IterNo()-1, 'WWWW')) as WeekDay
+  AutoGenerate (1)  
+  While IterNo() <= $(vDaysCnt);
+NEXT 
+
+ 
+
+// Adding loaded from the ControlData.xlsx schedule to the Schedule_Calendar
+Inner Join(Schedule_Calendar)
+LOAD Dashboard,
+     ScheduleTime,
+     WeekDay
+Resident Dashboard_Schedule
+Where not IsNull(ScheduleTime);
+ 
+
+// Adding File level information to the Schedule_Calendar
+Inner Join(Schedule_Calendar)
+LOAD Dashboard,
+     Application,     
+     FileType,
+     Sequence,
+     FilePath,
+     FileName
+Resident Load_Monitor; 
+
+
+
+
+Join(Schedule_Calendar)
+LOAD Application,     
+     FileType,
+     Sequence,
+     FilePath,
+     FileName,
+     LoadDT,
+     Num(Timestamp(Floor(LoadDT)+ScheduleTime)) as ScheduleTS
+Resident Schedule_Calendar;
+ 
+
+ 
+
+Drop Fields Dashboard, ScheduleTime, WeekDay From Schedule_Calendar;
+
+Join (File_Reload)
+LOAD * 
+Resident Schedule_Calendar;
+//Where Not Exists(LoadDT, LoadDT);
+
+
+DROP Tables  Load_Monitor,  /*File_Reload,*/ Schedule_Calendar, Dashboard_Schedule, Days_Between;
+
+
+//Removing ScheduleTS which are later than now
+NoConcatenate
+File_Reload_CleanSchedule:
+LOAD * Resident File_Reload
+Where ScheduleTS <= now() ;//LocalTime('UTC-05:00');//
+
+DROP Table File_Reload;
+RENAME Table File_Reload_CleanSchedule to File_Reload;
+
+ 
+
+///$tab ErrorsLoad
+CALL StartStat('File_Error');
+
+
+//Join (File_Reload)
+File_Error:
+LOAD ServerType,
+     Application,
+     FileName,
+     Date(Floor(LoadStart)) as LoadDT,
+     LoadStart as LoadStartTS,
+     ErrorDesc,
+     ErrorTS
+FROM [$(zGlobalQVD_Location)\$(vPrefix)File_Errors.qvd] (qvd);
+
+
+
+CALL StoreStat;
+ 
+///$tab Statuses
+// This subrouting deletes all the rows from pTbl which are in pByTbl with defined (not null) value of pByFld
+SUB ReduceTblByFld (pTbl, pByTbl, pByFld)
+  Left Join($(pTbl))
+  Load * Resident $(pByTbl);
+    
+  NoConcatenate
+  TmpTbl:
+  LOAD * Resident $(pTbl)
+  Where IsNull($(pByFld));
+  DROP Field $(pByFld) From TmpTbl;
+  
+  DROP Table $(pTbl);
+  RENAME Table TmpTbl to $(pTbl);
+ENDSUB
+
+
+
+Status:
+LOAD *
+FROM [$(zLocalSources_Location)\ControlData.xlsx]
+(ooxml, embedded labels, table is [Reload Status]);
+//
+//LOAD * Inline [ReloadStatus, StatusDesc
+//               1, OK
+//               2, No reaload in scheduled time
+//               3, Wrong sequence
+//               4, Script errors];
+             
+// Defining NO RELOAD status
+File_Reload_NR:
+NoConcatenate
+LOAD *,
+     2 as ReloadStatus // No Reload
+Resident File_Reload
+Where IsNull(LoadStartTS);
+
+NoConcatenate
+File_Reload_Tmp:
+LOAD * Resident File_Reload
+Where not IsNull(LoadStartTS);
+DROP Table File_Reload;
+RENAME Table File_Reload_Tmp to File_Reload;
+//CALL ReduceTblByFld('File_Reload', 'File_Reload_NR', 'ReloadStatus');
+
+//If NoOfRows(File_Error) > 0 then
+//Defining SCRIPT ERRORS status
+File_Reload_SE:
+LOAD ServerType,
+     Application,
+     FileName,
+     LoadDT,
+     LoadStartTS,
+     4 as ReloadStatus
+Resident File_Error;
+
+Inner Join (File_Reload_SE)
+LOAD Distinct * Resident File_Reload;
+
+CALL ReduceTblByFld('File_Reload', 'File_Reload_SE', 'ReloadStatus');
+//ELSE
+//File_Reload_SE:
+//LOAD * INLINE [ServerType, Application, FileName, LoadDT, LoadStartTS, ReloadStatus]; 
+//ENDIF;
+
+
+// Defining proper file reload sequance
+File_Reload_VS_Key:
+LOAD distinct *,
+     AutoNumber(ServerType&Application&ScheduleTS) as SrvAppDTKey
+Resident File_Reload
+Where Not IsNull(LoadStartTS);
+
+
+File_Reload_Ranked:
+LOAD *,
+     if(SrvAppDTKey = Peek(SrvAppDTKey),
+        RangeSum(1, Peek(LoadRank)),
+        1
+       ) as LoadRank
+Resident File_Reload_VS_Key
+Order By SrvAppDTKey,
+      LoadStartTS;
+
+
+File_Reload_WS:
+NoConcatenate
+LOAD ServerType,
+     Application,     
+     FileType,
+     Sequence,
+     FilePath,
+     FileName,
+     LoadDT,
+     ScheduleTS,
+     LoadStartTS,
+     LoadEndTS,
+     3 as ReloadStatus // Wrong sequence
+Resident File_Reload_Ranked
+Where LoadRank <> Sequence;
+
+DROP Tables File_Reload_Ranked,  File_Reload_VS_Key;
+
+CALL ReduceTblByFld('File_Reload', 'File_Reload_WS', 'ReloadStatus');
+
+
+// Defining OK status for the rest
+File_Reload_OK:
+NoConcatenate
+LOAD ServerType,
+     Application,     
+     FileType,
+     Sequence,
+     FilePath,
+     FileName,
+     LoadDT,
+     ScheduleTS,
+     LoadStartTS,
+     LoadEndTS,
+     1 as ReloadStatus // OK
+Resident File_Reload;
+
+Concatenate (File_Reload_NR)
+LOAD * Resident File_Reload_WS;
+Concatenate (File_Reload_NR)
+LOAD * Resident File_Reload_SE;
+Concatenate (File_Reload_NR)
+LOAD * Resident File_Reload_OK;
+
+DROP Tables File_Reload_SE, File_Reload_WS, File_Reload_OK, File_Reload;
+
+RENAME Table File_Reload_NR to File_Reload;
+
+Status_New:
+LOAD Distinct ReloadStatus 
+Resident File_Reload;
+Inner Join (Status_New)
+LOAD ReloadStatus,
+     StatusPriority,
+     StatusDesc
+Resident Status;
+Drop Table Status;
+RENAME Table Status_New to Status;
+
+CALL StoreStat;
+///$tab Calendar
+CALL StartStat('Calendar');
+
+Calendar_Days:
+LOAD distinct LoadDT
+Resident File_Reload;
+
+
+//LET vDaysCnt = peek('days', 0, 'Calendar_Days');
+//LET vMinLD = peek('MinLD', 0, 'Calendar_Days');
+  
+Calendar:  
+LOAD LoadDT,
+     LoadDT 											as Date,
+	'w'&week(LoadDT) 									as Week,
+	left(Date(LoadDT,'WWW'),3)							as WeekDay,
+	num(Day(LoadDT))									as MonthDay,
+	month(LoadDT) 										as Month,
+	'Q'&CEIL(MONTH(LoadDT)/3) 							as Quarter,
+	year(LoadDT) 										as Year,
+	Date (Weekstart(LoadDT), 'DD-MMM-YY') 				as DateWk,
+	NUM(monthstart(LoadDT)) 							as DateM,
+	NUM(QuarterStart(LoadDT)) 							as DateQ,
+	Date(YearStart(LoadDT),'YYYY') 						as DateY,
+	'w'&week(LoadDT)&'-'&Date(LoadDT,'YY') 				as WeekLabel,
+	Date(MonthStart(LoadDT),'MMM-YY') 					as MonthLabel,
+	'Q'&CEIL(MONTH(LoadDT)/3) &'-'&Date(LoadDT,'YY') 	as QtrLabel
+//LOAD LoadDT
+Resident Calendar_Days;
+ 
+
+DROP Table Calendar_Days;
+
+Call StoreStat;
+
+ 
+///$tab New QVWs
+CALL StartStat('Omit_List');
+
+Qualify *;
+Omit_List:
+LOAD *
+  	 FROM
+[$(zLocalSources_Location)\ControlData.xlsx]
+(ooxml, embedded labels, table is [Omit List]);
+Unqualify *;
+
+CALL StoreStat;
+
+CALL StartStat('Newcomers');
+
+Newcomers:
+//NoConcatenate
+LOAD *
+  	 FROM
+[$(zGlobalQVD_Location)\$(vPrefix)Newcomers.qvd]
+(qvd);
+
+left join (Newcomers)
+load 
+	Omit_List.FilePath as FPath,
+	Omit_List.FileName as FName,
+	1 as Flag_IsOmitted
+Resident Omit_List;
+
+CALL StoreStat;
+///$tab XMC Usage
+CALL StartStat('Usage');
+
+Usage:
+//NoConcatenate
+LOAD day(_TimeStamp) AS AccessDay,
+     month(_TimeStamp) AS AccessMonth,
+     year(_TimeStamp) AS AccessYear,
+     Audience, 
+     File, 
+     Document, 
+     EMP_Domain, 
+     EMP_SOEID, 
+    /* EMP_Name, 
+     EMP_Name_ID, 
+     EMP_Status, 
+     EMP_Status_Type, */
+     Description, 
+     Message, 
+     Id, 
+     EntryType, 
+     [Session Calls], 
+     [Session Selections], 
+     [Session Client], 
+     [Session Client Version], 
+     [Session Exit Reason], 
+     [Session Start], 
+     [Session Duration], 
+     Server, 
+     Log
+FROM [$(zLogsXMC_Location)\Logs_XMC_*.qvd] (qvd)
+Where Log = 'Sessions'  	 ;
+
+
+
+CALL StoreStat;
+
+///$tab DIM Employee
+CALL StartStat('Emps');
+
+
+inner keep (Usage)
+Emps:
+LOAD EMP_SOEID, 
+/*     EMP_GEID, 
+     EMP_RITS_ID, */
+     EMP_Name, 
+/*     EMP_Name_First, 
+     EMP_Name_First_Pref, 
+     EMP_Name_Middle, 
+     EMP_Name_Last,*/ 
+     EMP_Email, 
+     EMP_Job, 
+     EMP_Job_Title, 
+     EMP_Job_Family, 
+     EMP_Job_Function, 
+/*     EMP_Officer_Title, 
+     EMP_Officer_CD, 
+     EMP_FMB, 
+     EMP_GOC, 
+     EMP_Department_CD,*/ 
+     EMP_Department, 
+/*     EMP_Department_Mgr_GEID, 
+     EMP_Department_Mgr_Name, 
+     EMP_Direct_Mgr_GEID,*/ 
+     EMP_Direct_Mgr_Name, 
+/*     EMP_Business_Contact_GEID, 
+     EMP_Business_Contact_Name, 
+     EMP_Classification_CD, 
+     EMP_Classification, 
+     EMP_DT_ORIG_HIRE, 
+     EMP_DT_STRT, 
+     EMP_DT_TRMT, 
+     EMP_PEND_HIRE_IND, 
+     EMP_Status_CD, */
+     EMP_Status, 
+     EMP_Status_Type, 
+/*     EMP_Full_Part_Time_IND, 
+     EMP_Type_CD, 
+     EMP_Type_FLG, 
+     EMP_WRK_Location_CD, 
+     EMP_WRK_ADR_1, 
+     EMP_WRK_ADR_2, 
+     EMP_WRK_BLDG, 
+     EMP_WRK_BLDG_FLR, 
+     EMP_WRK_FLR_ZONE, */
+     EMP_WRK_City, 
+/*     EMP_WRK_State, 
+     EMP_WRK_ZIP, */
+     EMP_WRK_Country_CD3 
+/*     EMP_PHYSCL_CD3, 
+     EMP_PHYSCL_RGN, 
+     EMP_MGD_RGN*/
+FROM [$(zOuboundEmp_Location)\DIM_Employee.qvd](qvd);
+
+CALL StoreStat;
+///$tab Variables
+
+[Variables]:
+LOAD Variable as _Variable, 
+     Expression as _Expression, 
+     Type as _VariableType
+FROM
+[$(zLocalSources_Location)\ControlData.xlsx]
+(ooxml, embedded labels, table is Variables);
+
+///$tab Finish
+
+LET zLoad_Duration=interval(now(1)-vReloadStart, 'hh:mm:ss');
+LET zTableName = DocumentName();
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(vReloadStart)','$(zLoad_Duration)','','' ];
+///$tab Cleaninig
+
+
+exit Script;
+///$tab FileID
+  
+ Temp_File_Reload:
+ NoConcatenate
+LOAD    ServerType,
+	Application,
+	FileName,
+    if(isnull(LoadStartTS),0,LoadStartTS) as LoadStartTS,
+    LoadEndTS,
+    LoadDT,
+    FileType,
+    Sequence,
+    FilePath,
+    ScheduleTS
+ Resident File_Reload; 
+ 
+   
+ Temp_File_Error:
+ NoConcatenate
+LOAD ServerType,
+     Application,
+     FileName,
+     LoadDT, 
+    if(isnull(LoadStartTS),0,LoadStartTS) as LoadStartTS,
+    ErrorDesc,
+    ErrorTS
+ Resident File_Error; 
+
+DROP Tables File_Reload,File_Error;
+ 
+ 
+
+Temp_File:
+LOAD Distinct RowNo() as FileID,
+     ServerType,
+     Application,
+     FileName,
+     LoadDT,
+     LoadStartTS//,
+    // ScheduleTS
+      
+Resident Temp_File_Reload;
+
+inner Join (Temp_File_Reload)
+LOAD FileID,
+     ServerType,
+     Application,
+     FileName,
+     LoadDT,
+     LoadStartTS//,
+   //  ScheduleTS
+  
+Resident Temp_File;
+
+File_Reload:
+NoConcatenate
+LOAD  
+    FileID,
+    LoadEndTS,
+    FileType,
+    Sequence,
+    FilePath,
+    ScheduleTS
+ Resident Temp_File_Reload; 
+DROP table  Temp_File_Reload;
+
+ 
+ 
+
+inner Join (Temp_File_Error)
+LOAD FileID,
+     ServerType,
+     Application,
+     FileName,
+     LoadDT,
+      LoadStartTS
+Resident Temp_File;
+
+ 
+
+File_Error:
+NoConcatenate
+LOAD  
+	FileID,
+    ErrorDesc,
+    ErrorTS
+ Resident Temp_File_Error; 
+DROP table  Temp_File_Error;
+
+
+File:
+NoConcatenate
+load
+     FileID,
+     ServerType,
+     Application,
+     FileName,
+     LoadDT,
+     if(LoadStartTS=0,null(), LoadStartTS) as LoadStartTS//,
+    // ScheduleTS
+  Resident Temp_File;
+  
+ DROP Table Temp_File;
+      
+
+
+///$tab LoadDate
+TRACE '****** Defining Loading time & date for each Application ******';
+CALL StartStat('Apps_Load_Date');
+
+Reload_Dates:
+NoConcatenate
+LOAD Distinct ReloadDate
+Resident Load_Monitor;
+
+Apps:
+NoConcatenate
+LOAD Distinct Dashboard
+Resident Load_Monitor;
+
+LET vAppsNo = NoOfRows('Apps');
+
+Apps_Load_Date:
+LOAD * INLINE [Dashboard, LastLoadTimestamp];  
+
+LET vReloadsNo = NoOfRows('Reload_Dates');
+FOR r = 0 to $(vReloadsNo)-1
+  LET vReloadTS = Peek('ReloadDate', $(r), 'Reload_Dates'); 
+  LET vRelDate= Date('$(vReloadTS)');
+  
+  FOR i = 0 to $(vAppsNo)-1
+    LET vApp = peek('Dashboard', $(i), 'Apps');
+    LET vRefreshPeriod = lookup('RefreshPeriod', 'Dashboard', '$(vApp)', 'Load_Monitor');
+    LET vRefreshTime = lookup('RefreshTime', 'Dashboard', '$(vApp)' , 'Load_Monitor');
+    LET vLoadDate = if('$(vRefreshPeriod)' = 'M', 
+                       weekstart('$(vReloadTS)'),
+                       if('$(vRefreshPeriod)' = 'M-F',
+                          if(Weekday('$(vReloadTS)'+1) = 'Sat' or weekday('$(vReloadTS)'+1)='Sun',
+                             WeekStart('$(vReloadTS)')+4,
+                             '$(vReloadTS)'
+                            )
+                         )
+                      );  
+  
+    SET cLoadTime = Time#(Left($1, Index($1, Right($1, 2))-1)&If(FindOneOf($1,':')=0,':00')&':00 '&Upper(Right($1, 2)), 'h:mm:ss TT'); 
+    SET cLoadTimestamp = Timestamp#(Date#(Date($1))+Time#(Time($2)));               
+    LET vRefreshTimesCnt = SubStringCount('$(vRefreshTime)', ',')+1;  
+    LET vNow = ConvertToLocalTime(UTC(), 'GMT-05:00'/*Eastern Time (US & Canada)*/);
+    
+    IF $(vRefreshTimesCnt) > 1 THEN
+      
+    
+      LET vLTFound = 0;
+      
+      FOR j = 0 To $(vRefreshTimesCnt)-1
+         LET vTmpTime = trim(SubField('$(vRefreshTime)', ',', $(j)+1));
+         LET vTmpTime = $(cLoadTime(vTmpTime));
+         LET vTmpDate = $(cLoadTimestamp(vLoadDate,vTmpTime));
+       
+         LET C1 = Timestamp($(vTmpDate));
+         LET C2 = Timestamp(vReloadTS/*vNow*/);
+         
+         IF C1 >= C2 THEN
+           LET vLTFound = -1;
+           LET vTmpTime = trim(SubField('$(vRefreshTime)', ',', $(j)));
+           LET vLoadTime = $(cLoadTime(vTmpTime));
+           
+           EXIT FOR;
+         ENDIF;  
+      
+      NEXT;
+      
+      IF vLTFound = 0 THEN
+        LET vLoadTime = vTmpTime;
+      ENDIF;
+      
+    ELSE
+      LET vLoadTime = $(cLoadTime(vRefreshTime));    
+    ENDIF;
+    
+    LET vTmpDate = $(cLoadTimestamp(vLoadDate,vLoadTime));
+    LET C1 = Timestamp($(vTmpDate));
+    LET C2 = Timestamp(vReloadTS/*vNow*/);
+    IF C1 >= C2 THEN
+    
+      LET vLoadDate = vLoadDate - if(Weekday(vReloadTS/*vNow*/)='Mon', 3, 1);
+    ENDIF;
+    LET vLoadTimestamp = $(cLoadTimestamp(vLoadDate,vLoadTime));
+  
+  
+    Concatenate (Apps_Load_Date)
+    LOAD * INLINE [Dashboard, LastLoadTimestamp, ReloadDate
+                   '$(vApp)', $(vLoadTimestamp), '$(vReloadTS)'];
+  NEXT;
+NEXT;
+
+DROP Tables Apps, Reload_Dates;
+
+CALL StoreStat;
+///$tab LinkTable
+RDM_Link:
+LOAD RowNo() as RDM_ID,
+     Dashboard,
+     ServerType,
+     FilePath,
+     FileName,
+     ReloadDate
+Resident Load_Monitor;
+
+Join (Load_Monitor)
+LOAD RDM_ID,
+     Dashboard,
+     ServerType,
+     FilePath,
+     FileName,
+     ReloadDate
+Resident RDM_Link;
+
+Join (File_Errors)
+LOAD RDM_ID,
+     FilePath,
+     FileName,
+     ReloadDate
+Resident RDM_Link;
+
+Join(Apps_Load_Date)
+LOAD RDM_ID,
+     Dashboard,
+     ReloadDate
+Resident RDM_Link;
+
+left join (RDM_Link)
+load 
+	*
+FROM
+[$(zLocalSources_Location)\ControlData.xlsx]
+(ooxml, embedded labels, table is Links);
+
+Drop Fields Dashboard, ServerType, FilePath, FileName, ReloadDate From Load_Monitor, File_Errors, Apps_Load_Date;
+//DROP Fields Application, ReloadDate From Apps_Load_Date;   
+///$tab Schedule2
+Days_Between:
+LOAD ServerType,
+     Min(LoadStartTS) as MinLD,
+     Max(LoadEndTS) as MaxLD,
+     Max(LoadEndTS)-Min(LoadStartTS)+1 as days
+Resident File_Reload
+Group By ServerType;
+
+
+Schedule_Calendar:
+LOAD * Inline [ServerType, DateField, WeekDay];
+//Defining monitored dates from QVD for each Server Type (DEV, UAT, PROD)
+LET vDaysBetweenRowCnt = NoOfRows('Days_Between');
+FOR i = 0 to $(vDaysBetweenRowCnt)-1 
+  LET vDaysCnt = peek('days', $(i), 'Days_Between');
+  LET vMinLD = peek('MinLD', $(i), 'Days_Between');
+  SET vServerType = Peek('ServerType', $(i), 'Days_Between');
+  
+  Concatenate(Schedule_Calendar)
+  LOAD $(vServerType) as ServerType,
+       Date($(vMinLD) + IterNo()-1) as LoadDT,
+       Capitalize(Date($(vMinLD) + IterNo()-1, 'WWWW')) as WeekDay
+  AutoGenerate (1)
+  While IterNo() <= $(vDaysCnt);
+NEXT 
+
+// Adding loaded from the ControlData.xlsx schedule to the Schedule_Calendar
+Inner Join(Schedule_Calendar)
+LOAD Dashboard,
+     ScheduleTime,
+     WeekDay
+Resident Dashboard_Schedule
+Where not IsNull(ScheduleTime);
+
+// Adding File level information to the Schedule_Calendar
+Inner Join(Schedule_Calendar)
+LOAD Dashboard,
+     Application,     
+     FileType,
+     Sequence,
+     FilePath,
+     FileName
+Resident Load_Monitor;    
+
+
+
+Join(Schedule_Calendar)
+LOAD ServerType,
+     Application,
+     FileType,
+     Sequence,
+     FilePath,
+     FileName,
+     LoadDT,
+     Timestamp(LoadDT+Time#(ScheduleTime, 'h:mm TT')) as ScheduleTS
+Resident Schedule_Calendar;
+
+
+//Join(Schedule_Calendar)
+//LOAD ServerType,
+//     Application,
+//     FileType,
+//     Sequence,
+//     FilePath,
+//     FileName,
+//     LoadDT,
+//     LoadStartTS,
+//     LoadEndTS
+//Resident File_Reload;
+
+DROP Fields WeekDay;//, ScheduleTime;
+
+
+
+//TmpTbl:
+//LOAD ServerType,
+//     Application,
+//     FileType,
+//     Sequence,
+//     FilePath,
+//     FileName,
+//     LoadDT,
+//     LoadStartTS,
+//     LoadEndTS,
+//     Max(ScheduleTS) as ScheduleTS
+//Resident Schedule_Calendar
+//Where ScheduleTS <= LoadStartTS
+//Group By ServerType,
+//     Application,
+//     FileType,
+//     Sequence,
+//     FilePath,
+//     FileName,
+//     LoadDT,
+//     LoadStartTS,
+//     LoadEndTS;
+     
+
+//Store File_Reload into  File_Reload.qvd (qvd);
+
+
+
+//Order by ServerType, Application, FileName, LoadStartTS, ScheduleTS ASC;
+
+//NoConcatenate
+//tmp: 
+//LOAD ServerType,
+//     Application,
+//     FileType,
+//     Sequence,
+//     FilePath,
+//     FileName,
+//     LoadStartTS,
+//     LoadEndTS,
+//     LoadDT,
+//     ScheduleTS,
+//     //min(fabs(LoadStartTS - ScheduleTS)) as ScheduleTS 
+//     LoadStartTS - min(fabs(LoadStartTS - ScheduleTS)) as dist         
+//Resident File_Reload_Clean
+//group by  ServerType,
+//     Application,
+//     FileType,
+//     Sequence,
+//     FilePath,
+//     FileName,
+//     LoadStartTS,
+//     LoadEndTS,
+//     LoadDT;
+     
+     
+    
+//where (
+//       ScheduleTS <= LoadStartTS 
+//      or (ScheduleTS >= LoadStartTS and ScheduleTS <= LoadEndTS)
+//      ) and pre();
+
+
+
+//Cleaning
+DROP Tables Load_Monitor, Days_Between, File_Reload, Schedule_Calendar, Dashboard_Schedule;
+
+//CALL StoreStat;
+
+Exit script;
+
+///$tab Schedule1
+Days_Between:
+LOAD ServerType,
+     Min(LoadDT) as MinLD,
+     Max(LoadDT) as MaxLD,
+     Max(LoadDT)-Min(LoadDT)+1 as days
+Resident File_Reload
+Group By ServerType;
+
+
+Schedule_Calendar:
+LOAD * Inline [ServerType, DateField, WeekDay];
+//Defining monitored dates from QVD for each Server Type (DEV, UAT, PROD)
+LET vDaysBetweenRowCnt = NoOfRows('Days_Between');
+FOR i = 0 to $(vDaysBetweenRowCnt)-1 
+  LET vDaysCnt = peek('days', $(i), 'Days_Between');
+  LET vMinLD = peek('MinLD', $(i), 'Days_Between');
+  SET vServerType = Peek('ServerType', $(i), 'Days_Between');
+  
+  Concatenate(Schedule_Calendar)
+  LOAD $(vServerType) as ServerType,
+       Date($(vMinLD) + IterNo()-1) as DateField,
+       Capitalize(Date($(vMinLD) + IterNo()-1, 'WWWW')) as WeekDay
+  AutoGenerate (1)
+  While IterNo() <= $(vDaysCnt);
+NEXT 
+
+// Adding loaded from the ControlData.xlsx schedule to the Schedule_Calendar
+Inner Join(Schedule_Calendar)
+LOAD Dashboard,
+     ScheduleTime,
+     WeekDay
+Resident Dashboard_Schedule
+Where not IsNull(ScheduleTime);
+
+// Adding File level information to the Schedule_Calendar
+Inner Join(Schedule_Calendar)
+LOAD Dashboard,
+     Application,     
+     FileType,
+     Sequence,
+     FilePath,
+     FileName
+Resident Load_Monitor;    
+
+TmpTbl: LOAD * Inline [ServerType, Application, FileName, LoadStartTS, ScheduleTS];
+// Adding Schedule to the File_Reload table
+LET vFileReloadRowCnt=NoOfRows('File_Reload');
+FOR i=0 to vFileReloadRowCnt-1
+  LET vServerType = Peek('ServerType', $(i), 'File_Reload');
+  LET vApplication = Peek('Application', $(i), 'File_Reload');  
+  LET vFileName = Peek('FileName', $(i), 'File_Reload');
+  LET vLoadStartTS = Peek('LoadStartTS', $(i), 'File_Reload');
+  Concatenate(TmpTbl)
+  //Join(File_Reload)
+  LOAD ServerType,
+       Application,     
+//       FileType,
+//       Sequence,
+//       FilePath,
+       FileName,
+       '$(vLoadStartTS)' as LoadStartTS,
+       Max(Timestamp(DateField+Time#(ScheduleTime, 'h:mm TT'))) as ScheduleTS
+  Resident Schedule_Calendar
+  Where ServerType = '$(vServerType)'
+    and Application = '$(vApplication)'
+    and FileName = '$(vFileName)'
+    and Timestamp(DateField+Time#(ScheduleTime, 'h:mm TT')) <= '$(vLoadStartTS)'
+  Group By ServerType,
+        Application,     
+//        FileType,
+//        Sequence,
+//        FilePath,
+        FileName;
+NEXT
+
+
+Join(File_Reload)
+LOAD * 
+Resident TmpTbl;
+
+//Join(File_Reload)
+//LOAD ServerType,
+//     Application,
+//     FileType,
+//     Sequence,
+//     FilePath,
+//     FileName,
+//     DateField as LoadDT,
+//     Timestamp(DateField+Time#(ScheduleTime, 'h:mm TT')) as ScheduleTS
+//Resident Schedule_Calendar
+//Where Timestamp(DateField+Time#(ScheduleTime, 'h:mm TT')) <= LoadStartTS;
+
+//Store File_Reload into  File_Reload.qvd (qvd);
+
+
+NoConcatenate
+File_Reload_Clean:
+LOAD ServerType,
+     Application,
+     FileType,
+     Sequence,
+     FilePath,
+     FileName,
+     LoadStartTS,
+     LoadEndTS,
+     Date(Floor(ScheduleTS)) as LoadDT,
+     ScheduleTS
+Resident File_Reload;
+//Order by ServerType, Application, FileName, LoadStartTS, ScheduleTS ASC;
+
+//NoConcatenate
+//tmp: 
+//LOAD ServerType,
+//     Application,
+//     FileType,
+//     Sequence,
+//     FilePath,
+//     FileName,
+//     LoadStartTS,
+//     LoadEndTS,
+//     LoadDT,
+//     ScheduleTS,
+//     //min(fabs(LoadStartTS - ScheduleTS)) as ScheduleTS 
+//     LoadStartTS - min(fabs(LoadStartTS - ScheduleTS)) as dist         
+//Resident File_Reload_Clean
+//group by  ServerType,
+//     Application,
+//     FileType,
+//     Sequence,
+//     FilePath,
+//     FileName,
+//     LoadStartTS,
+//     LoadEndTS,
+//     LoadDT;
+     
+     
+    
+//where (
+//       ScheduleTS <= LoadStartTS 
+//      or (ScheduleTS >= LoadStartTS and ScheduleTS <= LoadEndTS)
+//      ) and pre();
+
+
+DROP Table File_Reload;
+RENAME Table File_Reload_Clean to File_Reload;
+
+//Cleaning
+DROP Tables Load_Monitor, Days_Between, Schedule_Calendar, Dashboard_Schedule;
+
+//CALL StoreStat;
+
+Exit script;
+

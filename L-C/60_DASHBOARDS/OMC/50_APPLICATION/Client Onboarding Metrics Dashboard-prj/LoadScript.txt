@@ -1,0 +1,54 @@
+﻿///$tab Main
+BINARY [..\40_DATA_MODEL\OMC_DM.qvw];
+// Password for hidden script: BSU_Access
+
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+
+SET vAppVersion="7.4.1 (5.0)";
+
+$(Include=..\..\..\20_QV_INCLUDE\OMC_DBRD_Locations.cfg);
+$(Include=$(zEnvironmentVariable_Location)\Environment_Variable.cfg);
+
+
+
+///$tab Control Data
+LET vVars = NoOfRows('Variables');
+
+For i = 0 to $(vVars)-1
+
+	LET vVarName= Peek('_Variable',i,'Variables');
+	LET $(vVarName) = peek('_Expression',i,'Variables');
+
+NEXT i;
+
+drop table Variables;
+///$tab Variables
+set vInProgressParam="Count({^<DateType={Start},Status={'In Progress'},Business={'^1'}>}DISTINCT REQUESTID)";
+let vInProgressParam=replace('$(vInProgressParam)','^','$');
+
+set vRequests60DMoreParam="Count({^<DateType={Start},[%DateKey]={~<^(=(Today()-60))~},Business={'^1'}>}DISTINCT REQUESTID)";
+let vRequests60DMoreParam=replace(replace('$(vRequests60DMoreParam)','^','$'),'~','"');
+
+set vTotalCompletedParam="Count({^<DateType={End}, Status={Completed},Business={'^1'}>}DISTINCT REQUESTID)";
+let vTotalCompletedParam=replace('$(vTotalCompletedParam)','^','$');
+
+set vTotalCancelledParam="Count({^<DateType={Start},Status={Cancelled},Business={'^1'}>}DISTINCT REQUESTID)";
+let vTotalCancelledParam=replace('$(vTotalCancelledParam)','^','$');
+
+set vOnHoldParam="Count({^<DateType={OnHold},Status-={Completed,Cancelled},Business={'^1'}>}DISTINCT REQUESTID)";
+let vOnHoldParam=replace('$(vOnHoldParam)','^','$');
+
+set vRequests60DLessParam="Count({^<DateType={Start},[%DateKey]={~>=^(=(Today()-60))~},Business={'^1'}>}DISTINCT REQUESTID)";
+let vRequests60DLessParam=replace(replace('$(vRequests60DLessParam)','^','$'),'~','"');
+///$tab Exit
+
+exit script;

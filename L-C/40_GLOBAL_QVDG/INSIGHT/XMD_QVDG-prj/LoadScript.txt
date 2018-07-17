@@ -1,0 +1,434 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+
+SET vQVDGVersion="2.1.0(1.10P)";
+
+LET zLast_Reload=num(now(1));
+LET vApp = 'INSIGHT';
+LET vPrefix = 'XMD_';
+LET vUpFolders = if (ISnull(FileSize('..\20_QV_INCLUDE\$(vApp)_QVDG_Locations.cfg')),'..\..','..');
+
+//$(Include=..\..\10_QV_DB_CONFIG\XMCConnectionString.cfg); 
+$(Include=$(vUpFolders)\20_QV_INCLUDE\$(vApp)_QVDG_Locations.cfg);
+$(Include=$(vUpFolders)\80_LOCAL_SOURCES\Environment_Variable.cfg);
+
+
+///$tab 2.1.0 (1.10) Patch
+Set ErrorMode=0;
+$(Include=$(zLocalSources_Location)\patch.qvs);
+set ErrorMode=1;
+
+
+///$tab LoadFileList
+Load_Monitor:
+ LOAD *
+FROM
+[$(zLocalSources_Location)\ControlData.xlsx]
+(ooxml, embedded labels, table is [Load Monitor]);
+
+//set vFieldList='Dashboard,
+//				Application,
+//				[File Type],
+//				Sequence,
+//				FilePath,
+//				FileName';
+//for each WeekDay in 'Mon','Tue','Wed','Thu','Fri','Sat','Sun'
+//	Load_Monitor:
+//	LOAD 
+// 		$(vFieldList),
+// 		'$(WeekDay)' as RefreshPeriod,
+//		$(WeekDay) as RefreshTime
+//	FROM
+//	[$(zLocalSources_Location)\ControlData.xlsx]
+//	(ooxml, embedded labels, header is 1 lines, table is [Load Monitor2])
+//	where not(isnull($(WeekDay)));
+//next WeekDay;
+//let WeekDay=NULL;
+//let vFieldList=NULL;
+
+ServerInfo:
+ LOAD *
+FROM
+[$(zLocalSources_Location)\ControlData.xlsx]
+(ooxml, embedded labels, table is [Server Info])
+Where Environment = '$(vEnvironment)';
+
+//LOAD * INLINE [
+//    Application, FilePath, FileName, RefreshTime, RefreshPeriod
+//    COB, 40_GLOBAL_QVDG\COB\, CRMRaw_QVDGs.qvw, 2pm, M-F
+//    COB, 40_GLOBAL_QVDG\COB\, eCommitRaw_QVDGs.qvw, 2pm, M-F
+//    COB, 40_GLOBAL_QVDG\COB\, WorkOrderAsiaRaw_QVDGs.qvw, 2pm, M-F
+//    COB, 40_GLOBAL_QVDG\COB\, CRIRaw_QVDGs.qvw, 2pm, M-F
+//    COB, 40_GLOBAL_QVDG\COB\, eFlowRaw_QVDGs.qvw, 2pm, M-F
+//    COB, 40_GLOBAL_QVDG\COB\, COB1ReqPipelineRaw_QVDGs.qvw, 2pm, M-F
+//    COB, 40_GLOBAL_QVDG\COB\, COB2ReqPipelineRaw_QVDGs.qvw, 2pm, M-F
+//    COB, 40_GLOBAL_QVDG\COB\, MCLEReqPipelineRaw_QVDGs.qvw, 2pm, M-F
+//    COB, 40_GLOBAL_QVDG\COB\, COB_QVDGs.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\40_DATA_MODEL\, COB_DM.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\40_DATA_MODEL\, CRMRaw_DM.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\40_DATA_MODEL\, eCommitRaw_DM.qvw  , 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\40_DATA_MODEL\, CRIRaw_DM.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\40_DATA_MODEL\, WorkOrderAsiaRaw_DM.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\40_DATA_MODEL\, eFlowRaw_DM.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\40_DATA_MODEL\, COB1ReqPipelineRaw_DM.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\40_DATA_MODEL\, COB2ReqPipelineRaw_DM.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\40_DATA_MODEL\, MCLEReqPipelineRaw_DM.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\50_APPLICATION\, Client Onboarding Analytics.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\50_APPLICATION\, CRM raw.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\50_APPLICATION\, ecommit raw.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\50_APPLICATION\, CRI raw.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\50_APPLICATION\, WorkOrder Asia raw.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\50_APPLICATION\, eFlow raw.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\50_APPLICATION\, COB 1 Req Pipeline raw.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\50_APPLICATION\, COB 2 Req Pipeline raw.qvw, 2pm, M-F
+//    COB, 60_DASHBOARDS\COB\50_APPLICATION\, MCLE Req Pipeline raw.qvw, 2pm, M-F
+//    ACW, 40_GLOBAL_QVDG\ACW\, ACW_QVDGs.qvw, "3am, 3pm", M-F
+//    ACW, 60_DASHBOARDS\ACW\40_DATA_MODEL\, ACW_DATA_MODEL.qvw, "3am, 3pm", M-F
+//    ACW, 60_DASHBOARDS\ACW\50_APPLICATION\, AMC Account Workflow.qvw, "3am, 3pm", M-F
+//    GFCID, 40_GLOBAL_QVDG\GFCID\, GFCID_QVDGS.qvw, 7am, M
+//    GFCID, 60_DASHBOARDS\GFCID\40_DATA_MODEL\, GFCID_DM.qvw, 7am, M
+//    GFCID, 60_DASHBOARDS\GFCID\50_APPLICATION\, GFCID Data Quality Dashboard.qvw, 7am, M
+//    SPO, 40_GLOBAL_QVDG\SPO\, BPM_INFO_QVDG.qvw, 8:30am, M-F
+//    SPO, 60_DASHBOARDS\SPO\40_DATA_MODEL\, SPO_DATA_MODEL.qvw, 8:30am, M-F
+//    SPO, 60_DASHBOARDS\SPO\50_APPLICATION\, Securities Pricing Operations.qvw, 8:30am, M-F
+//    GGR, 40_GLOBAL_QVDG\GGR\,  GG_LAGS_QVDG.qvw , "12am, 6am, 12pm, 6pm", M-F
+//    GGR, 40_GLOBAL_QVDG\GGR\, GG_STATS_SUM_QVDG.qvw , "12am, 6am, 12pm, 6pm", M-F
+//    GGR, 40_GLOBAL_QVDG\GGR\, GG_STATS_TAB_QVDG.qvw, "12am, 6am, 12pm, 6pm", M-F
+//    GGR, 40_GLOBAL_QVDG\GGR\, GG_HEARTBEAT_HISTORY_QVDG.qvw, "12am, 6am, 12pm, 6pm", M-F
+//    GGR, 40_GLOBAL_QVDG\GGR\, GG_SRC_TGT_MAP_QVDG.qvw, "12am, 6am, 12pm, 6pm", M-F
+//    GGR, 40_GLOBAL_QVDG\GGR\, GG_PROCESS_MAP_QVDG.qvw, "12am, 6am, 12pm, 6pm", M-F
+//    GGR, 60_DASHBOARDS\GGR\40_DATA_MODEL\, GGR_DATA_MODEL.qvw, "12am, 6am, 12pm, 6pm", M-F
+//    GGR, 60_DASHBOARDS\GGR\50_APPLICATION\, Golden Gate Replication Dashboard.qvw, "12am, 6am, 12pm, 6pm", M-F
+//];
+
+//ServerInfo:
+//LOAD * INLINE [
+//    ServerType, ServerPath
+//    LOCAL, ..\..\
+//    ];
+//    DEV, \\nasswd18v1gma\qv_storage_dev\DATA\XMC\
+//    UAT, \\cmadashboardsuat\DATA\XMC\
+//    PROD, \\cmadashboards\DATA\XMC\
+//];
+
+///$tab LoadLogs
+/****************************** Start Skeleton ****************************************************************************************************/
+LET zTimeMark=now(1);
+LET zTableName = 'Load_Monitor';
+LET zTableName1 = 'File_Errors';
+/****************************** End Skeleton ******************************************************************************************************/
+SET ErrorMode = 0;
+SET NullInterpret = '';
+
+Load_Monitor_:	
+Load * INLINE [ 
+FilePath, FileName, LoadStart, LoadEnd
+];
+
+File_Errors:
+LOAD * Inline [
+Application, FileName, LoadStart, ErrorDesc, ErrorTS
+];
+
+LET SI_Rows = NoOfRows('ServerInfo');
+FOR s = 0 to $(SI_Rows)-1
+
+  LET vServerPath = Peek('ServerPath', $(s), 'ServerInfo');
+  LET vServerType = Peek('ServerType', $(s), 'ServerInfo');
+  LET LM_Rows = NoOfRows('Load_Monitor');
+  FOR i=0 to $(LM_Rows)-1
+    
+    LET vFilePath = Peek('FilePath',$(i),'Load_Monitor');
+    LET vFileName = Peek('FileName',$(i),'Load_Monitor');
+    LET vApplicaion = Peek('Application', $(i), 'Load_Monitor');
+    LET vTraceMsg = '****** Loading '&vFileName&' log file from '&vServerType&' ******';
+    TRACE  $(vTraceMsg);
+    LET FullFilePath = vServerPath&vFilePath&vFileName&'.log';
+    
+    TmpT1:
+    LOAD @1 as LogDate, 
+         @2 as LogTime, 
+         @3 as LogTT, 
+         @4, 
+         @5, 
+         @6, 
+         @7, 
+         @8, 
+         @9, 
+         @10
+    FROM  [$(FullFilePath)] 
+    (txt, unicode, explicit labels, delimiter is ' ', msq);
+    
+    If ScriptError = 'File Not Found' then
+      
+//      Concatenate (Load_Monitor_) 
+//      LOAD * INLINE [ServerType, FilePath,FileName, LoadStart, LoadEnd
+//                     $(vServerType), $(vFilePath), $(vFileName),,];
+    else
+      
+      //if max(TimeStamp(Timestamp#(LogDate & ' ' & LogTime & ' ' & Left(LogTT,2), 'MM/DD/YYYY hh:mm:ss TT')))
+      NoConcatenate TmpT2:
+      LOAD '$(vServerType)' as ServerType,
+           '$(vFilePath)' as FilePath,
+           '$(vFileName)' as FileName,
+           If(IsNull(Min(TimeStamp(Timestamp#(LogDate & ' ' & LogTime & ' ' & Left(LogTT,2), 'MM/DD/YYYY hh:mm:ss TT')))),
+              Min(TimeStamp(Timestamp#(LogDate & ' ' & LogTime & ' ' & Left(LogTT,2), 'DD-MMM-YYYY hh:mm:ss TT'))) ,
+              Min(TimeStamp(Timestamp#(LogDate & ' ' & LogTime & ' ' & Left(LogTT,2), 'MM/DD/YYYY hh:mm:ss TT')))
+             )as LoadStart,
+           If(IsNull(max(TimeStamp(Timestamp#(LogDate & ' ' & LogTime & ' ' & Left(LogTT,2), 'MM/DD/YYYY hh:mm:ss TT')))),
+              max(TimeStamp(Timestamp#(LogDate & ' ' & LogTime & ' ' & Left(LogTT,2), 'DD-MMM-YYYY hh:mm:ss TT'))) ,
+              max(TimeStamp(Timestamp#(LogDate & ' ' & LogTime & ' ' & Left(LogTT,2), 'MM/DD/YYYY hh:mm:ss TT')))
+             )as LoadEnd
+      Resident TmpT1;
+      
+      LET vFileLoadStart = Timestamp(Peek('LoadStart', 0, 'TmpT2'));
+      
+      Concatenate (Load_Monitor_)
+      LOAD ServerType,
+           FilePath,
+           FileName,
+           LoadStart,
+           LoadEnd
+      Resident TmpT2;
+    
+      DROP Table TmpT1;
+      DROP Table TmpT2;
+      
+       
+      
+      NoConcatenate TmpT1:
+      LOAD Trim(Left([@1:n], FindOneOf([@1:n], ':', 3)-1)) as ErrorTS,
+           Trim(Right([@1:n], Len([@1:n]) - FindOneOf([@1:n], ' ', 4)))	as ErrorDesc
+      FROM
+      [$(FullFilePath)] (fix, unicode)
+      Where Index(Upper([@1:n]), 'ERROR:') > 0;
+      
+      If NoOfRows('TmpT1') > 0 then
+//        Left Join (TmpT1)
+//        LOAD * INLINE [Applicaion, FileName, LoadStart
+//                       $(vApplicaion), $(vFileName), $(vFileLoadStart)
+//                      ];
+                      
+        Concatenate(File_Errors)
+        LOAD '$(vServerType)' as ServerType,
+             '$(vApplicaion)' as Application,
+             '$(vFileName)' as FileName,
+             '$(vFileLoadStart)' as LoadStart,
+             ErrorTS,
+             ErrorDesc 
+        Resident TmpT1; 
+      ENDIF;
+            
+      
+      DROP Table TmpT1;
+
+    ENDIF;
+    
+  NEXT;
+//DROP Table TmpT1;
+//NoConcatenate
+
+NEXT;
+
+LEFT Join (Load_Monitor)
+  LOAD ServerType,
+       FilePath,
+       FileName,
+       LoadStart,
+       LoadEnd
+Resident Load_Monitor_;
+
+drop table Load_Monitor_;
+
+
+//TmpT1:
+//LOAD DISTINCT Timestamp(Date(LoadTimestamp)&' 02:00:00 PM', /*DateFormat&' '&TimeFormat*/'M/D/YYYY hh:mm:ss TT') as LoadStart,
+//     IsNull(LoadTimestamp) as IsN
+//Resident Load_Monitor
+//Where LoadTimestamp <> '';
+//
+//Join(TmpT1)
+//LOAD
+//     FilePath,
+//     FileName,
+//     LoadTimestamp
+//Resident Load_Monitor;
+//
+//
+//DROP Table TmpT1;
+
+LET vLoadDate = Peek('LoadTimestamp', LM_Rows, 'Load_Monitor');
+     
+//LEFT Join ($(zTableName) )
+//LOAD * Inline [ReloadDate
+//               $(zLast_Reload)
+//              ];
+
+SET ErrorMode = 1;
+     
+/****************************** Start Skeleton ****************************************************************************************************/
+//STORE [$(zTableName)] INTO [$(zGlobalQVD_Location)\$(vApp)\$(zTableName).qvd] (qvd);
+//STORE [$(zTableName1)] INTO [$(zGlobalQVD_Location)\$(vApp)\$(zTableName1).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=num(noofrows('$(zTableName)'),'###,###,###');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+LET zNoOfColumns=NoOfFields ('$(zTableName1)');
+LET zNoOfRows=num(noofrows('$(zTableName1)'),'###,###,###');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName1)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+/****************************** End Skeleton ******************************************************************************************************/
+///$tab StoreLogs
+Load_Monitor_Hstr:				//loads all columns into empty table structure 'Load_Monitor_Hstr'
+NoConcatenate
+LOAD *
+Resident Load_Monitor
+where isnull(FileName);
+
+// Loading data of previous reloads from stored qvd file
+SET ErrorMode = 0;
+
+concatenate(Load_Monitor_Hstr)
+LOAD DISTINCT *
+FROM [$(zGlobalQVD_Location)\$(vPrefix)$(zTableName).qvd] (qvd);
+
+SET ErrorMode = 1;
+
+// Adding loaded data from QVD to the current dataset
+Concatenate (Load_Monitor)
+LOAD DISTINCT *
+Resident Load_Monitor_Hstr; 
+
+// Storing all data back to QVDs
+DROP Fields Dashboard, FileType, Sequence, FilePath, AP_Path From Load_Monitor;
+STORE [$(zTableName)] INTO [$(zGlobalQVD_Location)\$(vPrefix)$(zTableName).qvd] (qvd);  
+
+//loads all columns into empty table structure 'File_Errors_Hstr'
+File_Errors_Hstr:			
+NoConcatenate
+LOAD *
+Resident File_Errors
+where isnull(FileName);
+
+// Loading data of previous reloads from stored qvd file
+SET ErrorMode = 0;
+
+concatenate(File_Errors_Hstr)
+LOAD DISTINCT *
+FROM [$(zGlobalQVD_Location)\$(vPrefix)$(zTableName1).qvd] (qvd);
+
+SET ErrorMode = 1;
+
+// Adding loaded data from QVD to the current dataset
+Concatenate (File_Errors)
+LOAD DISTINCT *
+Resident File_Errors_Hstr; 
+
+// Storing all data back to QVDs
+STORE [$(zTableName1)] INTO [$(zGlobalQVD_Location)\$(vPrefix)$(zTableName1).qvd] (qvd);
+
+DROP Tables Load_Monitor_Hstr, File_Errors_Hstr;
+///$tab NewComers
+/****************************** Start Skeleton ****************************************************************************************************/
+LET zTimeMark=now(1);
+LET zTableName = 'Newcomers';
+/****************************** End Skeleton ******************************************************************************************************/
+
+Actual_Logs_List:
+LOAD * Inline [FPath, FName, FSize, FTime
+              ];
+
+SUB GoDir (Root)
+	FOR Each vFile in FileList(Root&'\*.log')
+		Concatenate (Actual_Logs_List)
+		LOAD 
+//			'$(Root)' as FPath,
+			 replace('$(Root)','$(vRootPath)','')&'\' as FPath,
+		     Replace(Replace('$(vFile)', '$(Root)'&'\', ''), '.log', '') as FName, 
+			 FileSize( '$(vFile)' ) as FSize, 
+			 FileTime( '$(vFile)' ) as FTime
+		autogenerate 1;
+	NEXT vFile
+	FOR Each vDir in DirList(Root&'\*' )
+		call GoDir (vDir)
+	NEXT vDir
+ENDSUB
+
+let vRootPath = left(DocumentPath(),Index(DocumentPath(),'\',SubStringCount(DocumentPath(), '\')- if('$(vUpFolders)'='..',1,2)));
+
+CALL GoDir('$(vUpFolders)');
+
+[$(zTableName)]:
+LOAD FPath,
+     FName,
+     FTime
+Resident Actual_Logs_List
+Where not Exists(FileName, FName);
+
+DROP Table Actual_Logs_List;
+
+//loads all columns into empty table structure 'Newcomers_Hstr'
+Newcomers_Hstr:			
+NoConcatenate
+LOAD * 
+Resident Newcomers
+Where IsNull(FName);
+
+// Loading data of previous reloads from stored qvd file
+SET ErrorMode = 0;
+
+concatenate(Newcomers_Hstr)
+LOAD DISTINCT * 
+FROM [$(zGlobalQVD_Location)\$(vPrefix)$(zTableName).qvd] (qvd);
+
+SET ErrorMode = 1;
+
+Concatenate(Newcomers)
+LOAD DISTINCT * 
+Resident Newcomers_Hstr;
+
+
+/****************************** Start Skeleton ****************************************************************************************************/
+STORE [$(zTableName)] INTO [$(zGlobalQVD_Location)\$(vPrefix)$(zTableName).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=num(noofrows('$(zTableName)'),'###,###,###');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+/****************************** End Skeleton ******************************************************************************************************/
+DROP Table Newcomers_Hstr;
+///$tab Exit
+//DROP Tables Load_Monitor_Hstr, Load_Monitor, LM_Tmp, File_Errors, ServerInfo, Newcomers, Omit_List;
+DROP Tables Load_Monitor, File_Errors, ServerInfo, Newcomers;
+
+LET zLoad_Duration=interval(now(1)-zLast_Reload, 'hh:mm:ss');
+LET zTableName = DocumentName();
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zLast_Reload)','$(zLoad_Duration)','','' ];
+
+set HidePrefix='%';
+DISCONNECT;
+EXIT Script;

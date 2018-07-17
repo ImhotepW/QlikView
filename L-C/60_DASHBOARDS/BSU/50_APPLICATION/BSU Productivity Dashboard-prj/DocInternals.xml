@@ -1,0 +1,601 @@
+﻿<DocInternals>
+  <AlwaysLoose>
+    <bool>false</bool>
+    <bool>false</bool>
+    <bool>false</bool>
+    <bool>false</bool>
+    <bool>false</bool>
+    <bool>false</bool>
+    <bool>false</bool>
+    <bool>false</bool>
+    <bool>false</bool>
+  </AlwaysLoose>
+  <FieldSrcTables>
+    <String>11</String>
+    <String>1</String>
+    <String>Manager</String>
+    <String>12</String>
+    <String>1</String>
+    <String>Manager</String>
+    <String>13</String>
+    <String>3</String>
+    <String>Geo</String>
+    <String>FactTable</String>
+    <String>LastWeekScore</String>
+    <String>14</String>
+    <String>1</String>
+    <String>Geo</String>
+    <String>15</String>
+    <String>1</String>
+    <String>Geo</String>
+    <String>16</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>17</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>19</String>
+    <String>1</String>
+    <String>Manager</String>
+    <String>20</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>21</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>22</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>23</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>24</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>25</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>26</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>27</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>28</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>29</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>30</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>31</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>32</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>33</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>34</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>35</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>36</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>37</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>38</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>39</String>
+    <String>1</String>
+    <String>FactTable</String>
+    <String>40</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>41</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>42</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>43</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>44</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>45</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>46</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>47</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>48</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>49</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>50</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>51</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>52</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>53</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>54</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>55</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>56</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>57</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+    <String>58</String>
+    <String>1</String>
+    <String>LastWeekScore</String>
+  </FieldSrcTables>
+  <TableViewData>
+    <Pos></Pos>
+    <CtlInfo>
+      <InternalView>
+        <Tables>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>702</Left>
+              <Top>611</Top>
+              <Width>188</Width>
+              <Height>154</Height>
+            </Pos>
+            <Caption>FlexBranch</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>1064</Left>
+              <Top>516</Top>
+              <Width>165</Width>
+              <Height>118</Height>
+            </Pos>
+            <Caption>%Load Statistics</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>480</Left>
+              <Top>611</Top>
+              <Width>163</Width>
+              <Height>82</Height>
+            </Pos>
+            <Caption>GIWBranch</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>328</Left>
+              <Top>96</Top>
+              <Width>148</Width>
+              <Height>82</Height>
+            </Pos>
+            <Caption>CSIReference</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>756</Left>
+              <Top>239</Top>
+              <Width>152</Width>
+              <Height>154</Height>
+            </Pos>
+            <Caption>DailyData</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>866</Left>
+              <Top>230</Top>
+              <Width>146</Width>
+              <Height>298</Height>
+            </Pos>
+            <Caption>HistoricalData</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>762</Left>
+              <Top>614</Top>
+              <Width>131</Width>
+              <Height>82</Height>
+            </Pos>
+            <Caption>DailyValid</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>1356</Left>
+              <Top>504</Top>
+              <Width>161</Width>
+              <Height>82</Height>
+            </Pos>
+            <Caption>Variables</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>718</Left>
+              <Top>274</Top>
+              <Width>191</Width>
+              <Height>244</Height>
+            </Pos>
+            <Caption>MasterCalendar</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>459</Left>
+              <Top>387</Top>
+              <Width>100</Width>
+              <Height>64</Height>
+            </Pos>
+            <Caption>RegionLookup</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>326</Left>
+              <Top>239</Top>
+              <Width>162</Width>
+              <Height>82</Height>
+            </Pos>
+            <Caption>CountryRegionLookup</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>160</Left>
+              <Top>180</Top>
+              <Width>100</Width>
+              <Height>100</Height>
+            </Pos>
+            <Caption>Temp</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>418</Left>
+              <Top>263</Top>
+              <Width>100</Width>
+              <Height>82</Height>
+            </Pos>
+            <Caption>$Syn 1 Table</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>202</Left>
+              <Top>540</Top>
+              <Width>190</Width>
+              <Height>208</Height>
+            </Pos>
+            <Caption>BaselineForecast</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>207</Left>
+              <Top>194</Top>
+              <Width>220</Width>
+              <Height>46</Height>
+            </Pos>
+            <Caption>ForecastRange</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>201</Left>
+              <Top>284</Top>
+              <Width>195</Width>
+              <Height>244</Height>
+            </Pos>
+            <Caption>HistoricalForecast</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>587</Left>
+              <Top>225</Top>
+              <Width>151</Width>
+              <Height>82</Height>
+            </Pos>
+            <Caption>RagStatus</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>549</Left>
+              <Top>217</Top>
+              <Width>100</Width>
+              <Height>64</Height>
+            </Pos>
+            <Caption>DataLoad</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>81</Left>
+              <Top>77</Top>
+              <Width>132</Width>
+              <Height>298</Height>
+            </Pos>
+            <Caption>Calendar</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>560</Left>
+              <Top>50</Top>
+              <Width>169</Width>
+              <Height>481</Height>
+            </Pos>
+            <Caption>DataPumpTb</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>378</Left>
+              <Top>77</Top>
+              <Width>100</Width>
+              <Height>208</Height>
+            </Pos>
+            <Caption>DataDumpTb</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>617</Left>
+              <Top>371</Top>
+              <Width>100</Width>
+              <Height>82</Height>
+            </Pos>
+            <Caption>Scoring</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>540</Left>
+              <Top>32</Top>
+              <Width>151</Width>
+              <Height>82</Height>
+            </Pos>
+            <Caption>Geo</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>690</Left>
+              <Top>274</Top>
+              <Width>100</Width>
+              <Height>46</Height>
+            </Pos>
+            <Caption>Role</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>52</Left>
+              <Top>139</Top>
+              <Width>244</Width>
+              <Height>478</Height>
+            </Pos>
+            <Caption>FactTable</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>196</Left>
+              <Top>27</Top>
+              <Width>148</Width>
+              <Height>100</Height>
+            </Pos>
+            <Caption>Manager</Caption>
+          </TableViewTableWinSaveInfo>
+          <TableViewTableWinSaveInfo>
+            <Pos>
+              <Left>600</Left>
+              <Top>153</Top>
+              <Width>304</Width>
+              <Height>424</Height>
+            </Pos>
+            <Caption>LastWeekScore</Caption>
+          </TableViewTableWinSaveInfo>
+        </Tables>
+        <BroomPoints></BroomPoints>
+        <ConnectionPoints></ConnectionPoints>
+        <ZoomFactor>3FF0000000000000</ZoomFactor>
+      </InternalView>
+      <SourceView></SourceView>
+    </CtlInfo>
+    <Mode>0</Mode>
+  </TableViewData>
+  <Bookmarks></Bookmarks>
+  <SavedByVersion>11.20.12852.0409</SavedByVersion>
+  <ForceBackEndMacroExecution>false</ForceBackEndMacroExecution>
+  <FieldTags>
+    <ScriptBased>
+      <FieldTagData>
+        <Tag>$key</Tag>
+        <FieldNames>
+          <String>$Field</String>
+          <String>$Table</String>
+          <String>KYCOwnerCountry</String>
+          <String>%CaseManagerKey</String>
+          <String>$Syn 1</String>
+        </FieldNames>
+      </FieldTagData>
+      <FieldTagData>
+        <Tag>$hidden</Tag>
+        <FieldNames>
+          <String>$Field</String>
+          <String>$Table</String>
+          <String>$Rows</String>
+          <String>$Fields</String>
+          <String>$FieldNo</String>
+          <String>$Info</String>
+          <String>%TableName</String>
+          <String>%StartTime</String>
+          <String>%LoadDuration</String>
+          <String>%RowCount</String>
+          <String>%ColumnCount</String>
+          <String>%CaseManagerKey</String>
+          <String>$Syn 1</String>
+        </FieldNames>
+      </FieldTagData>
+      <FieldTagData>
+        <Tag>$system</Tag>
+        <FieldNames>
+          <String>$Field</String>
+          <String>$Table</String>
+          <String>$Rows</String>
+          <String>$Fields</String>
+          <String>$FieldNo</String>
+          <String>$Info</String>
+        </FieldNames>
+      </FieldTagData>
+      <FieldTagData>
+        <Tag>$ascii</Tag>
+        <FieldNames>
+          <String>$Field</String>
+          <String>$Table</String>
+          <String>$Info</String>
+          <String>%TableName</String>
+          <String>Role</String>
+          <String>CaseManagerID</String>
+          <String>KYCOwnerCountry</String>
+          <String>KYCOwnerRegion</String>
+          <String>KYC_Owner_Cluster</String>
+          <String>%CaseManagerKey</String>
+        </FieldNames>
+      </FieldTagData>
+      <FieldTagData>
+        <Tag>$text</Tag>
+        <FieldNames>
+          <String>$Field</String>
+          <String>$Table</String>
+          <String>$Info</String>
+          <String>%TableName</String>
+          <String>Role</String>
+          <String>CaseManagerID</String>
+          <String>KYCOwnerCountry</String>
+          <String>KYCOwnerRegion</String>
+          <String>KYC_Owner_Cluster</String>
+          <String>%CaseManagerKey</String>
+          <String>CaseManager</String>
+        </FieldNames>
+      </FieldTagData>
+      <FieldTagData>
+        <Tag>$numeric</Tag>
+        <FieldNames>
+          <String>$Rows</String>
+          <String>$Fields</String>
+          <String>$FieldNo</String>
+          <String>%StartTime</String>
+          <String>%LoadDuration</String>
+          <String>%RowCount</String>
+          <String>%ColumnCount</String>
+          <String>Records Passed</String>
+          <String>Total Record Volume</String>
+          <String>Records w Maker &lt; 7 Days</String>
+          <String>Total Records with Maker</String>
+          <String>Records w Owner &lt; 14 Days</String>
+          <String>Total Records with Owner</String>
+          <String>Records Commented &lt; 7 Days</String>
+          <String># of Active KWT Records</String>
+          <String>Records Reviewed</String>
+          <String>Commentary Score %</String>
+          <String>R Completed</String>
+          <String>PPS % Weekly of Target Completed</String>
+          <String>Due Current Month</String>
+          <String># Records Pending</String>
+          <String>EOM On Time %</String>
+          <String>Completed Training</String>
+          <String>Training Assignments</String>
+          <String>Assignment Completion Score (%)</String>
+          <String># Of Passed Records</String>
+          <String># Of Reviews</String>
+          <String>PEQR Pass Rate (%)</String>
+          <String>WeekNo</String>
+          <String>LW_Records w Maker &lt; 7 Days</String>
+          <String>LW_Total Records with Maker</String>
+          <String>LW_Records w Owner &lt; 14 Days</String>
+          <String>LW_Total Records with Owner</String>
+          <String>LW_Records Commented &lt; 7 Days</String>
+          <String>LW_# of Active KWT Records</String>
+          <String>LW_Records Reviewed</String>
+          <String>LW_Commentary Score %</String>
+          <String>LW_R Completed</String>
+          <String>LW_Records Passed</String>
+          <String>LW_Total Record Volume</String>
+          <String>LW_Due Current Month</String>
+          <String>LW_# Records Pending</String>
+          <String>LW_Completed Training</String>
+          <String>LW_Training Assignments</String>
+          <String>LW_# Of Passed Records</String>
+          <String>LW_# Of Reviews</String>
+        </FieldNames>
+      </FieldTagData>
+      <FieldTagData>
+        <Tag>$integer</Tag>
+        <FieldNames>
+          <String>$Rows</String>
+          <String>$Fields</String>
+          <String>$FieldNo</String>
+          <String>%RowCount</String>
+          <String>%ColumnCount</String>
+          <String>Records Passed</String>
+          <String>Records w Maker &lt; 7 Days</String>
+          <String>Total Records with Maker</String>
+          <String>Records w Owner &lt; 14 Days</String>
+          <String>Total Records with Owner</String>
+          <String>Records Commented &lt; 7 Days</String>
+          <String># of Active KWT Records</String>
+          <String>Records Reviewed</String>
+          <String>R Completed</String>
+          <String>Due Current Month</String>
+          <String># Records Pending</String>
+          <String>Completed Training</String>
+          <String>Training Assignments</String>
+          <String># Of Passed Records</String>
+          <String># Of Reviews</String>
+          <String>WeekNo</String>
+          <String>LW_Records w Maker &lt; 7 Days</String>
+          <String>LW_Total Records with Maker</String>
+          <String>LW_Records w Owner &lt; 14 Days</String>
+          <String>LW_Total Records with Owner</String>
+          <String>LW_Records Commented &lt; 7 Days</String>
+          <String>LW_# of Active KWT Records</String>
+          <String>LW_Records Reviewed</String>
+          <String>LW_R Completed</String>
+          <String>LW_Records Passed</String>
+          <String>LW_Due Current Month</String>
+          <String>LW_# Records Pending</String>
+          <String>LW_Completed Training</String>
+          <String>LW_Training Assignments</String>
+          <String>LW_# Of Passed Records</String>
+          <String>LW_# Of Reviews</String>
+        </FieldNames>
+      </FieldTagData>
+      <FieldTagData>
+        <Tag>$timestamp</Tag>
+        <FieldNames>
+          <String>%StartTime</String>
+        </FieldNames>
+      </FieldTagData>
+      <FieldTagData>
+        <Tag>$synthetic</Tag>
+        <FieldNames>
+          <String>$Syn 1</String>
+        </FieldNames>
+      </FieldTagData>
+    </ScriptBased>
+    <Interactive></Interactive>
+  </FieldTags>
+  <FieldComments></FieldComments>
+  <TableComments></TableComments>
+  <CreatePrjFolder>false</CreatePrjFolder>
+  <LinkedTables></LinkedTables>
+</DocInternals>

@@ -1,0 +1,44 @@
+﻿///$tab Main
+BINARY [..\40_DATA_MODEL\BSU_DM.qvw];
+// Password for hidden script: BSU_Access
+
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+
+SET vAppVersion="7.0.1 (1.11)";
+
+Let vExists = if (ISnull(FileSize('..\20_QV_INCLUDE\BSU_DBRD_Locations.cfg')),0,1);
+
+//exit script;
+IF $(vExists) > 0 THEN 
+$(Include=..\20_QV_INCLUDE\BSU_DBRD_Locations.cfg);
+ELSE
+$(Include=..\..\..\20_QV_INCLUDE\BSU_DBRD_Locations.cfg);
+ENDIF;
+
+$(Include=$(zEnvironmentVariable_Location)\Environment_Variable.cfg);
+
+
+
+///$tab Control Data
+LET vVars = NoOfRows('Variables');
+
+For i = 0 to $(vVars)-1
+
+	LET vVarName= Peek('_Variable',i,'Variables');
+	LET $(vVarName) = peek('_Expression',i,'Variables');
+
+NEXT i;
+
+drop table Variables;
+///$tab Exit
+
+exit script;

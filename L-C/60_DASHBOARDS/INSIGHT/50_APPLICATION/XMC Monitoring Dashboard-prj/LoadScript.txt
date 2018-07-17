@@ -1,0 +1,32 @@
+﻿///$tab Main
+BINARY [..\40_DATA_MODEL\XMD_DM.qvw];
+
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='DD-MMM-YY h:mm:ss TT';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+
+LET vAppVersion = 'V5.1.0(1.0)';
+LET vApp = 'INSIGHT';
+LET vUpFolders = if (ISnull(FileSize('..\20_QV_INCLUDE\$(vApp)_DBRD_Locations.cfg')),'..\..\..','..');
+
+$(Include=$(vUpFolders)\20_QV_INCLUDE\$(vApp)_DBRD_Locations.cfg);
+$(Include=$(vUpFolders)\80_LOCAL_SOURCES\Environment_Variable.cfg);
+///$tab Variables
+
+LET vVars = NoOfRows('Variables');
+
+For i = 0 to $(vVars)-1
+
+	LET vVarName= Peek('_Variable',i,'Variables');
+	LET $(vVarName) = peek('_Expression',i,'Variables');
+
+NEXT i;
+
+DROP Table Variables;

@@ -1,0 +1,853 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='DD-MMM-YY';
+SET TimestampFormat='DD-MMM-YY h:mm:ss[.fff] TT';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+
+Directory;
+LET zLast_Reload=now(1);
+SET vDataModelVersion="6.8(1.9)";
+ 
+Let vExists = if (ISnull(FileSize('..\20_QV_INCLUDE\BSU_DBRD_Locations.cfg')),0,1);
+
+IF $(vExists) > 0 THEN 
+$(Include=..\20_QV_INCLUDE\BSU_DBRD_Locations.cfg);
+ELSE
+$(Include=..\..\..\20_QV_INCLUDE\BSU_DBRD_Locations.cfg);
+ENDIF;
+
+$(Include= $(zDBConfig_Location)\BSU_DBRD_Locations.cfg);
+///$tab Control Data
+LET zTimeMark=now(1);
+LET zTableName = 'Variables';
+
+[Variables]:
+LOAD Variable as _Variable, 
+     Expression as _Expression,
+     Type as _VariableType
+FROM
+[$(zLocalSources_Location)\Control Data.xlsx]
+(ooxml, embedded labels, table is variables);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+LET vVars = NoOfRows('Variables');
+
+For i = 0 to $(vVars)-1
+
+	LET vVarName= Peek('_Variable',i,'Variables');
+	LET $(vVarName) = peek('_Expression',i,'Variables');
+
+NEXT i;
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab Commentary
+LET zTimeMark=now(1);
+LET zTableName = 'Commentary';
+
+
+
+$(zTableName):
+LOAD kyc_owner_region as KYCOwnerRegion, 
+     kyc_owner_country as KYCOwnerCountry,
+     //cm_name as CaseManager,
+     cm_soeid as CaseManagerID, 
+     [Count of Records Reviewed], 
+     [Top Performing Case Manager]
+FROM
+[$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab KWT
+LET zTimeMark=now(1);
+LET zTableName = 'DataDumpTb';
+
+$(zTableName):
+LOAD KWTID, 
+     '$(vCMRole)' as Role,
+     //CaseManager,
+     CaseManagerID, 
+     KYCOwnerCountry, 
+     KYCOwnerRegion, 
+     WorkflowStatus, 
+     WorkflowStatusDate, 
+     LastActionDate, 
+     WorkflowStatusL1, 
+     WorkflowStatusL3, 
+     WorkflowStatusL3Date, 
+     KYC_Owner_Cluster
+FROM
+[$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+Concatenate LOAD KWTID, 
+     '$(vSCMRole)' as Role,
+     //SCMName as CaseManager,
+     SCMUserID as CaseManagerID, 
+     KYCOwnerCountry, 
+     KYCOwnerRegion, 
+     WorkflowStatus, 
+     WorkflowStatusDate, 
+     LastActionDate, 
+     WorkflowStatusL1, 
+     WorkflowStatusL3, 
+     WorkflowStatusL3Date, 
+     KYC_Owner_Cluster
+FROM
+[$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab Exit
+
+EXIT Script;
+///$tab Rejections
+LET zTimeMark=now(1);
+LET zTableName = 'Rejections';
+
+
+
+$(zTableName):
+LOAD //cm_name as CaseManager,  
+     cm_soeid as CaseManagerID,
+     Region as KYCOwnerRegion, 
+     [KYC Owner Country] as KYCOwnerCountry, 
+     Volume1 as "Records Passed",
+     Volume1/[% of Hub1] as "Total Record Volume"
+FROM
+[$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd); 
+
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+///$tab Targets
+LET zTimeMark=now(1);
+LET zTableName = 'Targets';
+
+
+
+$(zTableName):
+LOAD REGION as KYCOwnerRegion,
+     COUNTRY as KYCOwnerCountry, 
+     //[CASE MANAGER] as CaseManager, 
+     [CM SOEID] as CaseManagerID, 
+     [R COMPLETED], 
+     [TARGET WEEK],
+     %
+FROM
+[$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab KOE
+LET zTimeMark=now(1);
+LET zTableName = 'KOE';
+
+
+$(zTableName):
+LOAD [Region (Owner)] as KYCOwnerRegion, 
+     [Country (Owner)] as KYCOwnerCountry,
+     //cm_name as CaseManager, 
+     cm_soeid as CaseManagerID, 
+     [Records Due],  
+     [Pending Count], 
+     [EOM % On Time]
+FROM
+[$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab HRSS
+LET zTimeMark=now(1);
+LET zTableName = 'HRSS';
+
+
+$(zTableName):
+LOAD Region as KYCOwnerRegion, 
+     [Country Name] as KYCOwnerCountry, 
+     SOEID as CaseManagerID, 
+     [Sum of Completed Training], 
+     [Sum of Assigned Training], 
+     [% Assigned Completed 2]
+FROM
+[$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab PostExecQuality
+LET zTimeMark=now(1);
+LET zTableName = 'PostExecQuality';
+
+
+$(zTableName):
+LOAD [KYC Owner Region] as KYCOwnerRegion, 
+     [KYC Owner Country] as KYCOwnerCountry, 
+     //[Checker Name] as CaseManager, 
+     [Checker SOEID] as CaseManagerID, 
+     [Sum of No. of Passed Records], 
+     [No. of Reviews], 
+     [Pass %]
+FROM
+[$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab Panorama
+LET zTimeMark=now(1);
+LET zTableName = 'Panorama';
+
+
+
+$(zTableName):
+LOAD SOEID  as UserID,
+     ResourceName  as UserName,
+     DirectManagerLvl06Name,
+     DirectManagerLvl05Name,
+     DirectManagerLvl07Name,
+     DirectManagerLvl08Name,
+     DirectManagerLvl04Name,
+     DirectManagerLvl09Name,
+     DirectManager1Name
+FROM [$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab Geo
+LET zTimeMark=now(1);
+LET zTableName = 'Geo';
+
+$(zTableName):
+LOAD DISTINCT 
+     //KYC_Owner_Cluster,
+     KYCOwnerRegion,
+     KYCOwnerCountry
+Resident DataDumpTb;
+LOAD DISTINCT
+     KYCOwnerRegion, 
+     KYCOwnerCountry
+Resident Commentary;
+LOAD DISTINCT
+     KYCOwnerRegion, 
+     KYCOwnerCountry
+Resident Targets;
+LOAD DISTINCT
+     KYCOwnerRegion, 
+     KYCOwnerCountry
+Resident KOE;
+LOAD DISTINCT
+     KYCOwnerRegion, 
+     KYCOwnerCountry
+Resident HRSS;
+LOAD DISTINCT
+     KYCOwnerRegion, 
+     KYCOwnerCountry
+Resident PostExecQuality;
+LOAD DISTINCT
+     KYCOwnerRegion, 
+     KYCOwnerCountry
+Resident Rejections;
+Left Join
+LOAD DISTINCT 
+     KYC_Owner_Cluster,
+     KYCOwnerRegion,
+     KYCOwnerCountry
+Resident DataDumpTb;
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab Manager
+LET zTimeMark=now(1);
+LET zTableName = 'Manager';
+
+
+[$(zTableName)]: 
+LOAD DISTINCT
+     Role &'|'& CaseManagerID as %CaseManagerKey,
+     CaseManagerID,
+     Role
+Resident DataDumpTb;
+
+Inner Join
+LOAD UserName as CaseManager,
+     UserID as CaseManagerID
+Resident Panorama;
+
+
+//Populate HRSS data by appropriate Role field
+Left Join (HRSS)
+LOAD CaseManagerID,
+     Role
+Resident Manager;
+
+//Populate PostExecQuality data by appropriate Role field
+Left Join (PostExecQuality)
+LOAD CaseManagerID,
+     Role
+Resident Manager;
+
+// Merging dublicated names 
+//MergeNames:
+//LOAD MinString(CaseManager) as CM,
+//     CaseManagerID as CMID
+//Resident $(zTableName)
+//Group By CaseManagerID;
+//
+//DROP Field CaseManager From $(zTableName);
+//
+//Left Join ($(zTableName))
+//LOAD CMID as CaseManagerID,
+//     CM as CaseManager
+//Resident MergeNames;
+//
+//DROP Table MergeNames;
+//
+//Left Join ($(zTableName))
+//LOAD CaseManagerID,
+//     Role,
+//     Role & '|' & CaseManagerID as %CaseManagerKey
+//Resident $(zTableName);
+
+
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+///$tab Fact
+LET zTimeMark=now(1);
+LET zTableName = 'FactTable';
+
+Let zReportDate = Today(0);//MakeDate(2017, 11, 11);
+
+[$(zTableName)]: 
+LOAD DISTINCT Role&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry
+Resident DataDumpTb;
+LOAD DISTINCT  '$(vCMRole)'&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry
+Resident Commentary;
+LOAD DISTINCT  '$(vCMRole)'&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry
+Resident Targets;
+LOAD DISTINCT '$(vCMRole)'&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry
+Resident Rejections;
+LOAD DISTINCT  '$(vCMRole)'&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry
+Resident KOE;
+LOAD DISTINCT  Role&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry
+Resident HRSS;
+LOAD DISTINCT  Role&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry
+Resident PostExecQuality;
+
+
+
+
+// Defining Records w Maker < 7 Days 
+Left Join ($(zTableName))
+LOAD DISTINCT Role&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry,
+     count(if(num('$(zReportDate)') - floor(WorkflowStatusL3Date) < 7, KWTID, Null())) as "Records w Maker < 7 Days",
+     count(KWTID) as "Total Records with Maker"
+Resident DataDumpTb
+Where WorkflowStatusL3 = 'Maker' 
+Group By Role&'|'&CaseManagerID,
+     KYCOwnerCountry;
+
+     
+// Defining Records w Owner < 14 Days for CM   
+Left Join
+LOAD DISTINCT Role&'|'&CaseManagerID as %CaseManagerKey,     
+     KYCOwnerCountry,
+     Count(if(num('$(zReportDate)') - floor(WorkflowStatusL3Date) < 14, KWTID, Null())) as "Records w Owner < 14 Days",
+     Count(KWTID) as "Total Records with Owner"
+Resident DataDumpTb
+Where WorkflowStatusL3  = 'KYCO'
+Group By Role&'|'&CaseManagerID,
+     KYCOwnerCountry;
+
+          
+// Defining Records commented < 7 Days for CM
+//      and # of Active KWT Records for CM 
+Left Join
+LOAD DISTINCT  Role&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry,
+     count(if( num('$(zReportDate)') - floor(LastActionDate) < 7, KWTID, Null())) as "Records Commented < 7 Days",
+     Count(KWTID) as "# of Active KWT Records"
+Resident DataDumpTb
+Where Match(WorkflowStatusL1, 'Not Started', 'In Progress', 'Researcher') > 0
+Group By Role&'|'&CaseManagerID, 
+     KYCOwnerCountry;     
+ 
+
+//Defining Commentary information
+Left Join ($(zTableName))
+LOAD '$(vCMRole)'&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry,
+     [Count of Records Reviewed] as [Records Reviewed], 
+     [Top Performing Case Manager] as [Commentary Score %]
+Resident Commentary;
+
+
+//Defining Targets (PPS) information
+Left Join ($(zTableName))
+LOAD '$(vCMRole)'&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry,
+     [TARGET WEEK] as "PPS Weekly Target",
+     [R COMPLETED] as "R Completed", 
+     [%] as "PPS % Weekly of Target Completed"
+Resident Targets;
+
+//Adding Rejection information
+Left Join ($(zTableName))
+LOAD '$(vCMRole)'&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry,
+     [Records Passed],
+     [Total Record Volume]
+Resident Rejections;
+
+//Defining KOE information
+Left Join ($(zTableName))
+LOAD '$(vCMRole)'&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry,
+     [Records Due] as "Due Current Month", 
+     [Pending Count] as "# Records Pending", 
+     [EOM % On Time] as "EOM On Time %"
+Resident KOE;
+
+//Adding HRSS metrics
+Left Join($(zTableName))
+LOAD Role&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry, 
+     [Sum of Completed Training] as "Completed Training", 
+     [Sum of Assigned Training] as "Training Assignments",  
+     [% Assigned Completed 2] as "Assignment Completion Score (%)"
+Resident HRSS;
+
+//Adding ProstExecQuality metrics
+Left Join($(zTableName))
+LOAD Role&'|'&CaseManagerID as %CaseManagerKey,
+     KYCOwnerCountry, 
+     [Sum of No. of Passed Records] as "# Of Passed Records", 
+     [No. of Reviews] as "# Of Reviews", 
+     [Pass %] as "PEQR Pass Rate (%)"
+Resident PostExecQuality;
+
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab Score Storing
+LET zTimeMark=now(1);
+LET zTableName = 'LastWeekScore';
+
+SET ErrorMode = 0;
+
+// Loading previously Avg Score for previous week
+$(zTableName):
+LOAD *
+FROM [$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd)
+Where WeekNo = Week(Today(1))-1;     
+
+NoConcatenate
+$(zTableName)_New:
+LOAD week(Today(1)) as WeekNo,
+     [KYCOwnerCountry],
+     [%CaseManagerKey],
+     [Records w Maker < 7 Days] as [LW_Records w Maker < 7 Days],
+     [Total Records with Maker] as [LW_Total Records with Maker],
+     [Records w Owner < 14 Days] as [LW_Records w Owner < 14 Days],
+     [Total Records with Owner] as [LW_Total Records with Owner],
+     [Records Commented < 7 Days] as [LW_Records Commented < 7 Days],
+     [# of Active KWT Records] as [LW_# of Active KWT Records],
+     [Records Reviewed] as [LW_Records Reviewed],
+     [Commentary Score %] as [LW_Commentary Score %],
+     [PPS Weekly Target] as [LW_PPS Weekly Target],
+     [R Completed] as [LW_R Completed],
+     [Records Passed] as [LW_Records Passed],
+     [Total Record Volume] as [LW_Total Record Volume],
+     [Due Current Month] as [LW_Due Current Month],
+     [# Records Pending] as [LW_# Records Pending],
+     [Completed Training] as [LW_Completed Training],
+     [Training Assignments] as [LW_Training Assignments],
+     [# Of Passed Records] as [LW_# Of Passed Records],
+     [# Of Reviews] as [LW_# Of Reviews]
+Resident FactTable;
+Concatenate 
+LOAD *
+Resident $(zTableName);
+
+STORE [$(zTableName)_New] INTO [$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+
+///$tab Cleansing
+DISCONNECT;
+
+DROP Table DataDumpTb;
+DROP Table Panorama;
+DROP Table Commentary;
+DROP Table Targets;
+DROP Table Rejections;
+DROP TABLE KOE;
+DROP Table HRSS;
+DROP Table PostExecQuality;
+DROP Table AvgWeeklyScore;
+DROP Table LastWeekScore_New;
+//DROP Table DP_Manager;
+
+
+LET zLoad_Duration=interval(now(1)-zLast_Reload, 'hh:mm:ss');
+LET zTableName = DocumentName();
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zLast_Reload)','$(zLoad_Duration)','','' ];
+
+set HidePrefix='%';
+
+LET zNoOfColumns=null();
+LET zNoOfRows=null();
+LET zLoad_Duration=null();
+LET zTimeMark=null();
+LET zTableName=null();
+let vExists=null();
+//LET zReportDate=null();
+//Let vMinDate=null();
+//Let vMaxDate=null();
+///$tab DataPrivacy
+LET zTimeMark=now(1);
+LET zTableName = 'DataPrivacy';
+
+
+$(zTableName):
+// Level 4 managers
+LOAD DirectManagerLvl04Name as UserName,
+     DirectManagerLvl05Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl05Name <> '' and DirectManagerLvl04Name <> '';
+LOAD DirectManagerLvl04Name as UserName,
+     DirectManagerLvl06Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl06Name <> '' and DirectManagerLvl04Name <> '';
+LOAD DirectManagerLvl04Name as UserName,
+     DirectManagerLvl07Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl07Name <> '' and DirectManagerLvl04Name <> '';
+LOAD DirectManagerLvl04Name as UserName,
+     DirectManagerLvl08Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl08Name <> '' and DirectManagerLvl04Name <> '';
+LOAD DirectManagerLvl04Name as UserName,
+     DirectManagerLvl09Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl09Name <> '' and DirectManagerLvl04Name <> '';
+LOAD DirectManagerLvl04Name as UserName,
+     DirectManager1Name as SubordinateName
+Resident Panorama
+Where DirectManager1Name <> '' and DirectManagerLvl04Name <> '';
+LOAD DirectManagerLvl04Name as UserName,
+     UserName as SubordinateName
+Resident Panorama;
+LOAD DirectManagerLvl04Name as UserName,
+     DirectManagerLvl04Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl04Name <> '';
+// Level 5 managers
+LOAD DirectManagerLvl05Name as UserName,
+     DirectManagerLvl06Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl06Name <> '' and DirectManagerLvl05Name <> '';
+LOAD DirectManagerLvl05Name as UserName,
+     DirectManagerLvl07Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl07Name <> '' and DirectManagerLvl05Name <> '';
+LOAD DirectManagerLvl05Name as UserName,
+     DirectManagerLvl08Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl08Name <> '' and DirectManagerLvl05Name <> '';
+LOAD DirectManagerLvl05Name as UserName,
+     DirectManagerLvl09Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl09Name <> '' and DirectManagerLvl05Name <> '';
+LOAD DirectManagerLvl05Name as UserName,
+     DirectManager1Name as SubordinateName
+Resident Panorama
+Where DirectManager1Name <> '' and DirectManagerLvl05Name <> '';
+LOAD DirectManagerLvl05Name as UserName,
+     UserName as SubordinateName
+Resident Panorama;
+LOAD DirectManagerLvl05Name as UserName,
+     DirectManagerLvl05Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl05Name <> '';
+//Level 6 managers
+LOAD DirectManagerLvl06Name as UserName,
+     DirectManagerLvl07Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl07Name <> '' and DirectManagerLvl06Name <> '';
+LOAD DirectManagerLvl06Name as UserName,
+     DirectManagerLvl08Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl08Name <> '' and DirectManagerLvl06Name <> '';
+LOAD DirectManagerLvl06Name as UserName,
+     DirectManagerLvl09Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl09Name <> '' and DirectManagerLvl06Name <> '';
+LOAD DirectManagerLvl06Name as UserName,
+     DirectManager1Name as SubordinateName
+Resident Panorama
+Where DirectManager1Name <> '' and DirectManagerLvl06Name <> '';
+LOAD DirectManagerLvl06Name as UserName,
+     UserName as SubordinateName
+Resident Panorama;
+LOAD DirectManagerLvl06Name as UserName,
+     DirectManagerLvl06Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl06Name <> '';
+// Level 7 managers
+LOAD DirectManagerLvl07Name as UserName,
+     DirectManagerLvl08Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl08Name <> '' and DirectManagerLvl07Name <> '';
+LOAD DirectManagerLvl07Name as UserName,
+     DirectManagerLvl09Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl09Name <> '' and DirectManagerLvl07Name <> '';
+LOAD DirectManagerLvl07Name as UserName,
+     DirectManager1Name as SubordinateName
+Resident Panorama
+Where DirectManager1Name <> '' and DirectManagerLvl07Name <> '';
+LOAD DirectManagerLvl07Name as UserName,
+     UserName as SubordinateName
+Resident Panorama;
+LOAD DirectManagerLvl07Name as UserName,
+     DirectManagerLvl07Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl07Name <> '';
+//Level 8 managers
+LOAD DirectManagerLvl08Name as UserName,
+     DirectManagerLvl09Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl09Name <> '' and DirectManagerLvl08Name <> '';
+LOAD DirectManagerLvl08Name as UserName,
+     DirectManager1Name as SubordinateName
+Resident Panorama
+Where DirectManager1Name <> '' and DirectManagerLvl08Name <> '';
+LOAD DirectManagerLvl08Name as UserName,
+     UserName as SubordinateName
+Resident Panorama;
+LOAD DirectManagerLvl08Name as UserName,
+     DirectManagerLvl08Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl08Name <> '';
+//Level 9 managers
+LOAD DirectManagerLvl09Name as UserName,
+     DirectManager1Name as SubordinateName
+Resident Panorama
+Where DirectManager1Name <> '' and DirectManagerLvl09Name <> '';
+LOAD DirectManagerLvl09Name as UserName,
+     UserName as SubordinateName
+Resident Panorama;
+LOAD DirectManagerLvl09Name as UserName,
+     DirectManagerLvl09Name as SubordinateName
+Resident Panorama
+Where DirectManagerLvl09Name <> '';
+// Direct managers
+LOAD DirectManager1Name as UserName,
+     UserName as SubordinateName
+Resident Panorama;
+LOAD DirectManager1Name as CaseManager,
+     DirectManager1Name as SubordinateName
+Resident Panorama;
+// Casemanagers
+LOAD UserName as UserName,
+     UserName as SubordinateName
+Resident Panorama;
+
+// Minimizing duplicates
+Left Join ($(zTableName))
+LOAD UserName,
+     Trim(SubField(UserName, ',', 1)) & ', ' & Trim(SubField(UserName, ',', 2)) as UserNameNew,
+     SubordinateName,
+     Trim(SubField(SubordinateName, ',', 1)) & ', ' & Trim(SubField(SubordinateName, ',', 2)) as SubordinateNameNew  
+Resident $(zTableName);
+
+
+
+//Adding SOEIDs
+Left Join ($(zTableName))
+LOAD UserID AS NTNAME, 
+     UserName as UserNameNew
+Resident Panorama;
+//Left Join ($(zTableName))
+//LOAD CaseManagerID,
+//     CaseManager as AccessName
+//Resident Panorama;
+
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab Scoring
+LET zTimeMark=now(1);
+LET zTableName = 'Scoring';
+
+
+[$(zTableName)]: 
+LOAD * INLINE [
+    Scoring, From, To
+    1-Very Good, 0.905, 10.00
+    2-Good, 0.695, 0.9049 
+    3-Fair, 0.505, 0.6949 
+    4-Poor, 0.2050, 0.5049 
+    5-Very Poor, 0, 0.2049   
+];
+
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+///$tab Master Calendar
+LET zTimeMark=now(1);
+LET zTableName = 'Calendar';
+
+$(zTableName)_:
+LOAD distinct %DateKey
+Resident DataDumpTb;
+//
+//MinMax:
+//LOAD Min(%DateKey) as min,
+//     Max(%DateKey) as max
+//Resident DataDumpTb;
+//
+//Let vMinDate = Peek('min', 0, 'MinMax');
+//Let vMaxDate = Peek('max', 0, 'MinMax');
+//
+//DROP Table MinMax;
+//
+//$(zTableName)_:
+//LOAD 
+//	$(vMinDate) + recno() - 1	as 	%DateKey
+//AUTOGENERATE vMaxDate - vMinDate + 1;
+
+$(zTableName):									//Forecasting %DateKeys
+NoConcatenate load
+	*
+Resident $(zTableName)_
+where %DateKey>today();
+
+concatenate($(zTableName))						//Actual Dates <=today()
+LOAD
+	*,
+	%DateKey 												as Date,
+	'w'&week(%DateKey) 										as Week,
+	left(Date(%DateKey,'WWW'),3)							as WeekDay,
+	num(Day(%DateKey))										as MonthDay,
+	month(%DateKey) 										as Month,
+	'Q'&CEIL(MONTH(%DateKey)/3) 							as Quarter,
+	year(%DateKey) 											as Year,
+	Date (Weekstart(%DateKey), 'DD-MMM-YY') 				as DateWk,
+	NUM(monthstart(%DateKey)) 								as DateM,
+	NUM(QuarterStart(%DateKey)) 							as DateQ,
+	Date(YearStart(%DateKey),'YYYY') 						as DateY,
+	'w'&week(%DateKey)&'-'&Date(%DateKey,'YY') 				as WeekLabel,
+	Date(MonthStart(%DateKey),'MMM-YY') 					as MonthLabel,
+	'Q'&CEIL(MONTH(%DateKey)/3) &'-'&Date(%DateKey,'YY') 	as QtrLabel
+Resident $(zTableName)_
+	where %DateKey<=today();
+
+DROP TABLE $(zTableName)_;
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=noofrows('$(zTableName)');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];

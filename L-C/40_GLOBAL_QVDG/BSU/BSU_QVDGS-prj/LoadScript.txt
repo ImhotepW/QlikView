@@ -1,0 +1,666 @@
+﻿///$tab Main
+SET ThousandSep=',';
+SET DecimalSep='.';
+SET MoneyThousandSep=',';
+SET MoneyDecimalSep='.';
+SET MoneyFormat='$#,##0.00;($#,##0.00)';
+SET TimeFormat='h:mm:ss TT';
+SET DateFormat='M/D/YYYY';
+SET TimestampFormat='M/D/YYYY h:mm:ss[.fff] TT';
+SET MonthNames='Jan;Feb;Mar;Apr;May;Jun;Jul;Aug;Sep;Oct;Nov;Dec';
+SET DayNames='Mon;Tue;Wed;Thu;Fri;Sat;Sun';
+
+
+Directory;
+LET zLast_Reload=now(1);
+SET vQVDGVersion="7.3(1.0)";
+
+$(Include=..\..\20_QV_INCLUDE\BSU_QVDG_Locations.cfg);
+
+//$(Include=$(zDBConfig_Location)\XMCConnectionString.cfg); 
+
+
+///$tab KWT
+LET zTimeMark=now(1);
+LET zTableName = 'DataDumpTb';
+
+[$(zTableName)]: 
+LOAD KWTID, 
+     /*LegacyKWTID, 
+     GFCID, 
+     CompanyName,*/
+     Upper(CaseManagerID) as  CaseManagerID, 
+     CaseManager, 
+     /*ServiceCountryCode, 
+     ServiceCountry, 
+     KYCOwnerID, 
+     KYCOwner, 
+     KYCOwnerCountryCode, */
+     KYCOwnerCountry, 
+     KYCOwnerRegion, 
+     /*KYCRenewalDate, 
+     KYCApprovalDate, 
+     ServiceRegion, 
+     WorkflowStatusID,*/ 
+     WorkflowStatus, 
+     /*CoreAppx, 
+     OriginalRenewalDate, */
+     date(WorkflowStatusDate, 'DD-MM-YY hh:mm:ss.fffffffff') as WorkflowStatusDate, 
+     /*FocusScale, 
+     FocusType, 
+     HubID,*/ 
+     Hub, 
+     /*ExtHubId, 
+     SLAAction, 
+     KRUTeamName, 
+     GFPID, 
+     GFPIDName, 
+     AddedBy, 
+     BATComments, 
+     BAUEscalation, 
+     BearerShareEntity, 
+     ClosureDate, 
+     DateCMAssigned, 
+     CoLocationRec, 
+     CorporateSegmentID, 
+     CorporateSegment, 
+     AddToTable, 
+     DateInitiated, 
+     DocReceivedFromClient, 
+     DocReceivedFromCoverage, 
+     DocRequestedFromClient, 
+     DocRequestedFromCoverage, 
+     RiskScore, 
+     RiskRating, 
+     ExecutionComments, 
+     Exempted, 
+     FCB, 
+     FMPSIAGFCID, 
+     FMIAPSID, 
+     FMIAPS, 
+     FollowUpDate, 
+     GSCTab, 
+     ICCCheckerUserID, 
+     ICCUsed, 
+     ICGBSUResponseID, 
+     ICGRCTEAMComments, 
+     IdIssues, 
+     POPTypeID, 
+     PopType, 
+     IncidentCategoryID, 
+     IncidentCategory, 
+     IncidentDescription, 
+     IncidentPRB, 
+     IncidentNumber, 
+     DateIncReported, 
+     DateIncResolved, 
+     InterimParentGFCID, 
+     InterimParentGFCIDName, 
+     UltimateGFCID, 
+     UltimateGFCIDName, 
+     KARAID, 
+     KARAName, */
+     date(LastActionDate, 'DD-MM-YY hh:mm:ss.fffffffff') as LastActionDate, 
+     /*UpdatedBy, 
+     LastUpdated, 
+     MexicoClientContact, 
+     MexicoWithEDD, 
+     MexicoDateWithEDD, 
+     MexicoSegmentID, 
+     MexicoSegment, 
+     OfflineApproval, 
+     OfflineApprovalCategoryID, 
+     OfflineApprovalCategory, 
+     OfflineApprovalDate, 
+     OfflineApprovalExpiry, 
+     PackagedAppx, 
+     ParentUpliftRecord, 
+     ParentDependantGFCID, 
+     PastDueEscalation, 
+     RecordPriorityId, 
+     RecordPriority, 
+     ResearchBegan, 
+     ResearchCompleted, 
+     ResearcherID, 
+     ResearcherName, 
+     SelectedForTesting, 
+     SPF, 
+     SPV, 
+     SLARange, 
+     RenewalPeriod, 
+     CheckerSOEID, 
+     CheckerDate, 
+     TranID, 
+     BSUTeamID, */
+     BSUTeamName, 
+     /*Upper(SCMUserID) as SCMUserID, 
+     SCMUserName, 
+     ClientTypeID, 
+     ClientType, 
+     CustomerTypeID, 
+     CustomerType, 
+     CheckerStatusID, 
+     CheckerStatusName, 
+     CheckerSeqID, 
+     Escalated, 
+     EscalationTypeID, 
+     EscalationTypeName, 
+     EscalationDescription, 
+     EscalationDate, 
+     EscalatedTo, 
+     SourceID, 
+     Source, 
+     OriginalRenewalPeriod, 
+     WeightedRank, 
+     DerivedStatus, 
+     ActiveFlag, 
+     KWTRenewalPeriod, 
+     ValidatedByICCChecker, 
+     KDGAnalystID, 
+     KDGAnalystName, 
+     ProjectID, 
+     Project, 
+     WorkTypeID, 
+     WorkType, 
+     PopulationTypeID, 
+     PopulationType, 
+     BusinessUnitID, 
+     BusinessUnit, 
+     WorkItemType, 
+     WorkItemTrigger, 
+     WorkItemStatusDesc, 
+     WorkItemCreationDate, 
+     KYCStatus, 
+     RejectionStatus, 
+     LastRejectionDate, */
+     WorkflowStatusL1, 
+     /*WorkflowStatusL1Date, 
+     WorkflowStatusL2, 
+     WorkflowStatusL2Date, */
+     WorkflowStatusL3, 
+     date(WorkflowStatusL3Date, 'DD-MM-YY hh:mm:ss.fffffffff') as WorkflowStatusL3Date/*, 
+     KWTPolicyDueDate, 
+     LegacyPOPType, 
+     KRUID, 
+     Compliance_Reviewer_SOEID, 
+     KRUWorkFlowStatus, 
+     KWT_Work_type, 
+     KWT_Component, 
+     Project_Type, 
+     RelationshipComplationDate, 
+     AML_Risk_Category, 
+     Focus_Scale_Identifier, 
+     Action_Awaited_Role, 
+     Business_Comments, 
+     KYC_Owner_Cluster, 
+     KYC_Owner_Sector_Industry_Team, 
+     KYC_Owner_Subbusiness_Group, 
+     KYC_Owner_Product_Family, 
+     LocalTag, 
+     IsAtRiskRecordOnTime, 
+     IsAtRiskRecordEndOfMonth, 
+     AtRiskGroupReason, 
+     AtRiskDetailReason*/
+FROM
+[$(zSharePoint_Location)/../kwt_data_report.xlsx]
+//[$(zLocalSources_Location)\kwt_data_report_20170719_1.xlsx]
+(ooxml, embedded labels, table is DataDumpTb);
+
+
+STORE [$(zTableName)] INTO [$(zGlobalQVD_Location)\..\$(zTableName).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=num(noofrows('$(zTableName)'),'###,###,###');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+Drop table [$(zTableName)];
+///$tab Commentary
+LET zTimeMark=now(1);
+LET zTableName = 'Commentary';
+
+
+[$(zTableName)]: 
+LOAD *
+FROM
+[$(zSharePoint_Location)\Commentary Scope and Review_v2.xlsx]
+//[\\icgshare.nam.citi.net@SSL\DavWWWRoot\sites\BSUPROD\Shared Documents\2.Scorecards\2.BSUCaseManagerScorecard\Commentary Scope and Review08112017.xlsx]
+(ooxml, embedded labels, /*header is 3 lines,*/ table is [AT Risk BAU_Data]);
+//WHERE( Index(kyc_owner_region, 'Total') = 0 and Index(kyc_owner_country, 'Total') = 0 );
+
+
+
+STORE [$(zTableName)] INTO [$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=num(noofrows('$(zTableName)'),'###,###,###');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+Drop table [$(zTableName)];
+
+
+///$tab PPS
+LET zTimeMark=now(1);
+LET zTableName = 'Targets';
+
+[$(zTableName)]: 
+LOAD [REGION],
+     [LOCATION],
+     [TEAM],
+     [CASE MANAGER],
+     [KDG ANALYST],
+     [VENDOR],
+     [TENURE (MTH)],
+     [CM COUNT],
+     [CM SOEID],
+     [START DATE],
+     [PANORAMA TENURE (MTH)],
+     [PANORAMA TENURE (MTH)2],
+     [CORE],
+     [APPX],
+     [MODIFIED],
+     [R COMPLETED],
+     [TARGET WEEK],
+     [R COMPLETED BY MONTH],
+     [C & A COMPLETED BY MONTH],
+     [C COMPLETED BY MONTH],
+     [A COMPLETED BY MONTH],
+     [M COMPLETED BY MONTH],
+     [C & A & M COMPLETED BY MONTH],
+     [TARGET MONTH],
+     [%],
+     [% TARGET MET OR EXCEEDED],
+     [% TARGET MET OR EXCEEDED2],
+     [TEAM BUCKET],
+     [DATE],
+     [REPORT TYPE],
+     [PANORAMA STATUS],
+     [R COMPLETED (MTH) HIGH RISK],
+     [R COMPLETED (MTH) MEDIUM RISK],
+     [R COMPLETED (MTH) LOW RISK],
+     [BAU_REM]
+FROM
+[$(zSharePoint_Location)\Personal Productivity Scorecard_v2.xlsx]
+(ooxml, embedded labels, /*header is 4 lines,*/ table is [PPS DATA], filters(
+Replace(1, top, StrCnd(null))
+));
+
+
+STORE [$(zTableName)] INTO [$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=num(noofrows('$(zTableName)'),'###,###,###');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+Drop table [$(zTableName)];
+
+
+///$tab Cleansing
+DISCONNECT;
+
+LET zLoad_Duration=interval(now(1)-zLast_Reload, 'hh:mm:ss');
+LET zTableName = DocumentName();
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zLast_Reload)','$(zLoad_Duration)','','' ];
+
+LET zLoad_Duration=null();
+LET zTableName = null();
+LET zTimeMark=null();
+LET zTableName = null();
+LET zNoOfColumns=null();
+LET zNoOfRows=null();
+LET zLoad_Duration=null();
+Let vExists=null();
+
+set HidePrefix='%';
+///$tab Exit
+
+EXIT Script;
+///$tab Rejections
+LET zTimeMark=now(1);
+LET zTableName = 'Rejections';
+
+[$(zTableName)]: 
+
+LOAD Region, 
+     Upper([KYC Owner Country]) as [KYC Owner Country], 
+     cm_name, 
+     Upper(cm_soeid) as cm_soeid, 
+     Volume, 
+     [% of Hub], 
+     Volume1,
+     [% of Hub1]
+FROM
+[$(zSharePoint_Location)/Weekly_Rejection_Report.xlsx]
+(ooxml, embedded labels, table is Pivot);
+
+
+STORE [$(zTableName)] INTO [$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=num(noofrows('$(zTableName)'),'###,###,###');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+Drop table [$(zTableName)];
+
+
+///$tab KOE
+LET zTimeMark=now(1);
+LET zTableName = 'KOE';
+
+$(zTableName):
+LOAD [Region (Owner)], 
+     [Country (Owner)], 
+     cm_name, 
+     Upper(cm_soeid) as cm_soeid, 
+     [Records Due], 
+     [Pending Count], 
+     [EOM % On Time]
+FROM
+[$(zSharePoint_Location)/KOE BAU On-Time Completion Data.xlsx]
+(ooxml, embedded labels, /*header is 6 lines,*/ table is [Case Manager On Time View], filters(
+Replace(2, top, StrCnd(null)),
+Replace(3, top, StrCnd(null))
+));
+
+
+
+STORE [$(zTableName)] INTO [$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=num(noofrows('$(zTableName)'),'###,###,###');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+Drop table [$(zTableName)];
+
+
+///$tab HRSS
+LET zTimeMark=now(1);
+LET zTableName = 'HRSS';
+
+$(zTableName):
+LOAD Region, 
+     Upper([Country Name]) as [Country Name], 
+     Upper(SOEID) as SOEID, 
+     [Sum of Completed] as [Sum of Completed Training],  //remove (leave names) to be 
+     [Sum of Assigned] as [Sum of Assigned Training],    //complient with BRD
+     [Sum of % Assignment Completed] as [% Assigned Completed 2] // with this too
+FROM
+[$(zSharePoint_Location)/HRSS_Pivots.xlsx]
+(ooxml, embedded labels, /*header is 2 lines,*/ table is CaseManager_SrCaseManager, filters(
+Replace(1, top, StrCnd(null)),
+Replace(2, top, StrCnd(null))
+));
+
+
+STORE [$(zTableName)] INTO [$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=num(noofrows('$(zTableName)'),'###,###,###');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+Drop table [$(zTableName)];
+
+
+///$tab PostExecQuality
+LET zTimeMark=now(1);
+LET zTableName = 'PostExecQuality';
+
+$(zTableName):
+LOAD [KYC Owner Region], 
+     Upper([KYC Owner Country]) as [KYC Owner Country],
+     [Checker Name], 
+     Upper([Checker SOEID]) as [Checker SOEID], 
+     [Sum of No. of Passed Records], 
+     /*[Sum of Records Done] as */[No. of Reviews],   //remove (leave names) to be 
+     /*[Sum of pass rate] as */[Pass %]               //complient with BRD
+FROM
+[$(zSharePoint_Location)/Weekly Reporting_Reviews.xlsx]
+(ooxml, embedded labels, /*header is 3 lines,*/ table is Checker, filters(
+Replace(1, top, StrCnd(null)),
+Replace(2, top, StrCnd(null))
+));
+
+
+STORE [$(zTableName)] INTO [$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=num(noofrows('$(zTableName)'),'###,###,###');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+Drop table [$(zTableName)];
+
+
+///$tab Data Privacy
+LET zTimeMark=now(1);
+LET zTableName = 'Panorama';
+
+$(zTableName):
+LOAD /*[m:etag],
+    id,
+    title,
+    updated,
+    [content/type],
+    [content/properties/ContentTypeID] as ContentTypeID,
+    [content/properties/GEID] as GEID,
+    [content/properties/TeamNameValue] as TeamNameValue,
+    [content/properties/RoleValue] as RoleValue,
+    [content/properties/ResourceStatusValue] as ResourceStatusValue,
+    [content/properties/BSUCOREValue] as BSUCOREValue,
+    [content/properties/RegionValue] as RegionValue,
+    [content/properties/LocationValue] as LocationValue,
+    [content/properties/Tbl_HubsValue] as Tbl_HubsValue,*/
+    [content/properties/SOEID] as SOEID,
+    [content/properties/ResourceName] as ResourceName,/*
+    [content/properties/ResourceType] as ResourceType,
+    [content/properties/DirectNonDirectValue] as DirectNonDirectValue,
+    [content/properties/Vendor] as Vendor,
+    [content/properties/Wipro] as Wipro,
+    [content/properties/StartDateInISG] as StartDateInISG,
+    [content/properties/TermDate] as TermDate,
+    [content/properties/Tenure] as Tenure,
+    [content/properties/ResourceName0] as ResourceName0,
+    [content/properties/ResourceType0] as ResourceType0,
+    [content/properties/DirectNonDirect0] as DirectNonDirect0,
+    [content/properties/Vendor0] as Vendor0,
+    [content/properties/Wipro0] as Wipro0,
+    [content/properties/StartDate] as StartDate,
+    [content/properties/TermDate0] as TermDate0,
+    [content/properties/Tenure0] as Tenure0,
+    [content/properties/SOEID0] as SOEID0,
+    [content/properties/FTEGOC] as FTEGOC,
+    [content/properties/OfficerTittleValue] as OfficerTittleValue,
+    [content/properties/TRSProjectID] as TRSProjectID,
+    [content/properties/Function] as Function,
+    [content/properties/Group] as Group,*/
+    [content/properties/DirectManagerLvl06Name] as DirectManagerLvl06Name,
+    [content/properties/DirectManagerLvl05Name] as DirectManagerLvl05Name,
+    [content/properties/DirectManagerLvl07Name] as DirectManagerLvl07Name,/*
+    [content/properties/HML] as HML,
+    [content/properties/TRSProjectName] as TRSProjectName,
+    [content/properties/ActimizeTriggers] as ActimizeTriggers,
+    [content/properties/AdminSupport] as AdminSupport,
+    [content/properties/AMLFeedbackLoop] as AMLFeedbackLoop,
+    [content/properties/AllClientTypes] as AllClientTypes,
+    [content/properties/AllFocusBAURem] as AllFocusBAURem,
+    [content/properties/AllScaleBAURem] as AllScaleBAURem,
+    [content/properties/BAUFocus] as BAUFocus,
+    [content/properties/BAUScale] as BAUScale,
+    [content/properties/BAUScaleNAM] as BAUScaleNAM,
+    [content/properties/BSUControls] as BSUControls,
+    [content/properties/CCBBSU] as CCBBSU,
+    [content/properties/CreditOnly] as CreditOnly,
+    [content/properties/KDGCorpGSG] as KDGCorpGSG,
+    [content/properties/KDGFIG] as KDGFIG,
+    [content/properties/PublicSectorForeignMissionsBankingFMB] as PublicSectorForeignMissionsBankingFMB,
+    [content/properties/Markets] as Markets,
+    [content/properties/NAOF] as NAOF,
+    [content/properties/NCOFRemediation] as NCOFRemediation,
+    [content/properties/NewClients] as NewClients,
+    [content/properties/OfflineApprovalRemediation] as OfflineApprovalRemediation,
+    [content/properties/OpsManagement] as OpsManagement,
+    [content/properties/OtherProjects] as OtherProjects,
+    [content/properties/MexicoBusinessSupport] as MexicoBusinessSupport,
+    [content/properties/ParentUplift] as ParentUplift,
+    [content/properties/RemediationFocus] as RemediationFocus,
+    [content/properties/RemediationScale] as RemediationScale,
+    [content/properties/Researcher] as Researcher,
+    [content/properties/LeaveOfAbsence] as LeaveOfAbsence,
+    [content/properties/KYCOwnerCountryValue] as KYCOwnerCountryValue,*/
+    [content/properties/DirectManagerLvl08Name] as DirectManagerLvl08Name,
+    [content/properties/DirectManagerLvl04Name] as DirectManagerLvl04Name,
+    [content/properties/DirectManagerLvl09Name] as DirectManagerLvl09Name,
+    [content/properties/DirectManager1Name] as DirectManager1Name/*,
+    [content/properties/RemediationTemporaryWaivers] as RemediationTemporaryWaivers,
+    [content/properties/StartDateInROLE] as StartDateInROLE,
+    [content/properties/Id] as Id,
+    [content/properties/ContentType] as ContentType,
+    [content/properties/Modified] as Modified,
+    [content/properties/Created] as Created,
+    [content/properties/CreatedById] as CreatedById,
+    [content/properties/ModifiedById] as ModifiedById,
+    [content/properties/Owshiddenversion] as Owshiddenversion,
+    [content/properties/Version] as Version,
+    [content/properties/Path] as Path,
+    [content/properties/Owshiddenversion/m:type] as [Owshiddenversion/m:type],
+    [content/properties/ModifiedById/m:type] as [ModifiedById/m:type],
+    [content/properties/CreatedById/m:type] as [CreatedById/m:type],
+    [content/properties/Created/m:type] as [Created/m:type],
+    [content/properties/Modified/m:type] as [Modified/m:type],
+    [content/properties/Id/m:type] as [Id/m:type],
+    [content/properties/StartDateInROLE/m:type] as [StartDateInROLE/m:type],
+    [content/properties/StartDateInROLE/m:null] as [StartDateInROLE/m:null],
+    [content/properties/RemediationTemporaryWaivers/m:type] as [RemediationTemporaryWaivers/m:type],
+    [content/properties/RemediationTemporaryWaivers/m:null] as [RemediationTemporaryWaivers/m:null],
+    [content/properties/DirectManager1Name/m:null] as [DirectManager1Name/m:null],
+    [content/properties/DirectManagerLvl09Name/m:null] as [DirectManagerLvl09Name/m:null],
+    [content/properties/DirectManagerLvl04Name/m:null] as [DirectManagerLvl04Name/m:null],
+    [content/properties/DirectManagerLvl08Name/m:null] as [DirectManagerLvl08Name/m:null],
+    [content/properties/KYCOwnerCountryValue/m:null] as [KYCOwnerCountryValue/m:null],
+    [content/properties/LeaveOfAbsence/m:type] as [LeaveOfAbsence/m:type],
+    [content/properties/LeaveOfAbsence/m:null] as [LeaveOfAbsence/m:null],
+    [content/properties/Researcher/m:type] as [Researcher/m:type],
+    [content/properties/Researcher/m:null] as [Researcher/m:null],
+    [content/properties/RemediationScale/m:type] as [RemediationScale/m:type],
+    [content/properties/RemediationScale/m:null] as [RemediationScale/m:null],
+    [content/properties/RemediationFocus/m:type] as [RemediationFocus/m:type],
+    [content/properties/RemediationFocus/m:null] as [RemediationFocus/m:null],
+    [content/properties/ParentUplift/m:type] as [ParentUplift/m:type],
+    [content/properties/ParentUplift/m:null] as [ParentUplift/m:null],
+    [content/properties/MexicoBusinessSupport/m:type] as [MexicoBusinessSupport/m:type],
+    [content/properties/MexicoBusinessSupport/m:null] as [MexicoBusinessSupport/m:null],
+    [content/properties/OtherProjects/m:type] as [OtherProjects/m:type],
+    [content/properties/OtherProjects/m:null] as [OtherProjects/m:null],
+    [content/properties/OpsManagement/m:type] as [OpsManagement/m:type],
+    [content/properties/OpsManagement/m:null] as [OpsManagement/m:null],
+    [content/properties/OfflineApprovalRemediation/m:type] as [OfflineApprovalRemediation/m:type],
+    [content/properties/OfflineApprovalRemediation/m:null] as [OfflineApprovalRemediation/m:null],
+    [content/properties/NewClients/m:type] as [NewClients/m:type],
+    [content/properties/NewClients/m:null] as [NewClients/m:null],
+    [content/properties/NCOFRemediation/m:type] as [NCOFRemediation/m:type],
+    [content/properties/NCOFRemediation/m:null] as [NCOFRemediation/m:null],
+    [content/properties/NAOF/m:type] as [NAOF/m:type],
+    [content/properties/NAOF/m:null] as [NAOF/m:null],
+    [content/properties/Markets/m:type] as [Markets/m:type],
+    [content/properties/Markets/m:null] as [Markets/m:null],
+    [content/properties/PublicSectorForeignMissionsBankingFMB/m:type] as [PublicSectorForeignMissionsBankingFMB/m:type],
+    [content/properties/PublicSectorForeignMissionsBankingFMB/m:null] as [PublicSectorForeignMissionsBankingFMB/m:null],
+    [content/properties/KDGFIG/m:type] as [KDGFIG/m:type],
+    [content/properties/KDGFIG/m:null] as [KDGFIG/m:null],
+    [content/properties/KDGCorpGSG/m:type] as [KDGCorpGSG/m:type],
+    [content/properties/KDGCorpGSG/m:null] as [KDGCorpGSG/m:null],
+    [content/properties/CreditOnly/m:type] as [CreditOnly/m:type],
+    [content/properties/CreditOnly/m:null] as [CreditOnly/m:null],
+    [content/properties/CCBBSU/m:type] as [CCBBSU/m:type],
+    [content/properties/CCBBSU/m:null] as [CCBBSU/m:null],
+    [content/properties/BSUControls/m:type] as [BSUControls/m:type],
+    [content/properties/BSUControls/m:null] as [BSUControls/m:null],
+    [content/properties/BAUScaleNAM/m:type] as [BAUScaleNAM/m:type],
+    [content/properties/BAUScaleNAM/m:null] as [BAUScaleNAM/m:null],
+    [content/properties/BAUScale/m:type] as [BAUScale/m:type],
+    [content/properties/BAUScale/m:null] as [BAUScale/m:null],
+    [content/properties/BAUFocus/m:type] as [BAUFocus/m:type],
+    [content/properties/BAUFocus/m:null] as [BAUFocus/m:null],
+    [content/properties/AllScaleBAURem/m:type] as [AllScaleBAURem/m:type],
+    [content/properties/AllScaleBAURem/m:null] as [AllScaleBAURem/m:null],
+    [content/properties/AllFocusBAURem/m:type] as [AllFocusBAURem/m:type],
+    [content/properties/AllFocusBAURem/m:null] as [AllFocusBAURem/m:null],
+    [content/properties/AllClientTypes/m:type] as [AllClientTypes/m:type],
+    [content/properties/AllClientTypes/m:null] as [AllClientTypes/m:null],
+    [content/properties/AMLFeedbackLoop/m:type] as [AMLFeedbackLoop/m:type],
+    [content/properties/AMLFeedbackLoop/m:null] as [AMLFeedbackLoop/m:null],
+    [content/properties/AdminSupport/m:type] as [AdminSupport/m:type],
+    [content/properties/AdminSupport/m:null] as [AdminSupport/m:null],
+    [content/properties/ActimizeTriggers/m:type] as [ActimizeTriggers/m:type],
+    [content/properties/ActimizeTriggers/m:null] as [ActimizeTriggers/m:null],
+    [content/properties/TRSProjectName/m:null] as [TRSProjectName/m:null],
+    [content/properties/HML/m:null] as [HML/m:null],
+    [content/properties/DirectManagerLvl07Name/m:null] as [DirectManagerLvl07Name/m:null],
+    [content/properties/DirectManagerLvl05Name/m:null] as [DirectManagerLvl05Name/m:null],
+    [content/properties/DirectManagerLvl06Name/m:null] as [DirectManagerLvl06Name/m:null],
+    [content/properties/Group/m:null] as [Group/m:null],
+    [content/properties/Function/m:null] as [Function/m:null],
+    [content/properties/TRSProjectID/m:null] as [TRSProjectID/m:null],
+    [content/properties/FTEGOC/m:null] as [FTEGOC/m:null],
+    [content/properties/ManagedSegmentLevel10/m:null] as [ManagedSegmentLevel10/m:null],
+    [content/properties/ManagedSegmentL8/m:null] as [ManagedSegmentL8/m:null],
+    [content/properties/GOC/m:null] as [GOC/m:null],
+    [content/properties/Tenure/m:null] as [Tenure/m:null],
+    [content/properties/TermDate/m:null] as [TermDate/m:null],
+    [content/properties/StartDateInISG/m:type] as [StartDateInISG/m:type],
+    [content/properties/StartDateInISG/m:null] as [StartDateInISG/m:null],
+    [content/properties/Wipro/m:null] as [Wipro/m:null],
+    [content/properties/Vendor/m:null] as [Vendor/m:null],
+    [content/properties/ResourceType/m:null] as [ResourceType/m:null],
+    [content/properties/Tbl_HubsValue/m:null] as [Tbl_HubsValue/m:null],
+    [content/properties/TeamNameValue/m:null] as [TeamNameValue/m:null],
+    [category/term] as term,
+    [category/scheme] as scheme,
+    [title/type],
+    %Key_feed_353A984E43E5258F,    // Key to parent table: feed
+    %Key_entry_DBF4DB52A7786704    // Key for this table: feed/entry*/
+FROM [$(zPanorama_Location)] (XmlSimple, Table is [feed/entry]);
+
+
+STORE [$(zTableName)] INTO [$(zGlobalQVD_Location)\$(zTableName).qvd] (qvd);
+
+LET zNoOfColumns=NoOfFields ('$(zTableName)');
+LET zNoOfRows=num(noofrows('$(zTableName)'),'###,###,###');
+LET zLoad_Duration=interval(now(1)-zTimeMark, 'hh:mm:ss');
+
+[%Load Statistics]: 
+Load * inline [ %TableName, %StartTime, %LoadDuration, %RowCount, %ColumnCount
+'$(zTableName)','$(zTimeMark)','$(zLoad_Duration)','$(zNoOfRows)','$(zNoOfColumns)' ];
+
+Drop table [$(zTableName)];
+
+
